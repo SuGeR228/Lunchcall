@@ -1,0 +1,2139 @@
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MEGOGO Lunch Booking</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: "class" };</script>
+    
+    <style>
+      :root { color-scheme: dark; }
+      html.dark { color-scheme: dark; }
+      html:not(.dark) { color-scheme: light; }
+      body {
+        margin: 0; min-height: 100vh;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      }
+      html.dark body {
+        background: radial-gradient(circle at 0% 0%, #1a76b9 0%, rgba(6, 16, 61, 0.9) 45%, transparent 65%),
+                    radial-gradient(circle at 100% 100%, #b01364 0%, rgba(44, 6, 32, 0.96) 50%, transparent 70%),
+                    linear-gradient(145deg, #020617 0%, #040015 40%, #020617 100%);
+        background-repeat: no-repeat; background-attachment: fixed; color: #e5e7eb;
+      }
+      html:not(.dark) body {
+        background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+        background-attachment: fixed; color: #0f172a;
+      }
+      .view-toggle {
+        background: rgba(15, 23, 42, 0.9); border-radius: 999px; padding: 3px;
+        border: 1px solid rgba(148, 163, 184, 0.45); box-shadow: 0 18px 40px rgba(15, 23, 42, 0.9);
+        backdrop-filter: blur(18px);
+      }
+      .view-toggle-btn {
+        border-radius: 999px; padding: 0.3rem 0.95rem; font-size: 11px; font-weight: 600;
+        letter-spacing: 0.14em; text-transform: uppercase; border: none; background: transparent;
+        cursor: pointer; color: rgba(148, 163, 184, 0.9); transition: all 140ms ease-out;
+      }
+      .view-toggle-btn:hover { transform: translateY(-1px); color: rgba(226, 232, 240, 0.95); }
+      .view-toggle-btn-active {
+        color: #020617; background: linear-gradient(135deg, #f9fafb, #e5e7eb);
+        box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.95), 0 12px 30px rgba(15, 23, 42, 0.95);
+      }
+      .glass-panel { border-radius: 1.5rem; backdrop-filter: blur(26px); }
+      html.dark .glass-panel {
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.78));
+        border: 1px solid rgba(248, 250, 252, 0.06); box-shadow: 0 22px 60px rgba(15, 23, 42, 0.95);
+      }
+      html:not(.dark) .glass-panel {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
+        border: 1px solid rgba(148, 163, 184, 0.3); box-shadow: 0 22px 60px rgba(0, 0, 0, 0.08);
+      }
+      .slot-cell {
+        position: relative; display: inline-flex; align-items: center; justify-content: center;
+        height: 2rem; width: 2.8rem; border-radius: 0.5rem;
+        --accent-main: #ec4899; --accent-soft: rgba(244, 114, 182, 0.25); --accent-glow: rgba(236, 72, 153, 0.9);
+        cursor: pointer; transition: all 140ms ease-out;
+      }
+      html.dark .slot-cell { border: 1px solid rgba(100, 116, 139, 0.7); background-color: rgba(15, 23, 42, 0.9); }
+      html:not(.dark) .slot-cell { border: 1px solid rgba(148, 163, 184, 0.5); background-color: rgba(255, 255, 255, 0.9); }
+      .slot-cell:hover { transform: translateY(-1px); }
+      html.dark .slot-cell:hover { background-color: rgba(30, 64, 175, 0.9); border-color: rgba(148, 163, 184, 0.9); }
+      html:not(.dark) .slot-cell:hover { background-color: rgba(226, 232, 240, 0.95); border-color: rgba(100, 116, 139, 0.8); }
+      
+      .slot-cell.slot-booked {
+        background-image: linear-gradient(135deg, var(--accent-soft), var(--accent-main));
+        border-color: rgba(248, 250, 252, 0.9); box-shadow: 0 0 18px var(--accent-glow);
+      }
+      html:not(.dark) .slot-cell.slot-booked { border: none; box-shadow: 0 0 18px var(--accent-glow); }
+      html.simplified .slot-cell.slot-booked { background-image: none !important; background-color: var(--accent-main) !important; box-shadow: none !important; border: 1px solid rgba(0,0,0,0.1) !important; }
+      
+      .slot-tooltip {
+        position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-6px);
+        padding: 0.4rem 0.6rem; font-size: 11px; font-weight: 500; white-space: pre-line; text-align: center;
+        border-radius: 0.5rem; pointer-events: none; z-index: 100; opacity: 0; transition: all 120ms ease-out;
+        width: max-content;
+      }
+      .slot-tooltip.tooltip-bottom { bottom: auto; top: 100%; transform: translateX(-50%) translateY(6px); }
+      .slot-cell.slot-booked:hover .slot-tooltip { opacity: 1; transform: translateX(-50%) translateY(-8px); }
+      .slot-cell.slot-booked:hover .slot-tooltip.tooltip-bottom { opacity: 1; transform: translateX(-50%) translateY(8px); }
+      html.dark .slot-tooltip { background: rgba(15, 23, 42, 0.98); border: 1px solid rgba(148, 163, 184, 0.4); color: #e2e8f0; }
+      html:not(.dark) .slot-tooltip { background: rgba(15, 23, 42, 0.98); border: 1px solid rgba(148, 163, 184, 0.3); color: #f1f5f9; }
+      
+      .modal-select { appearance: none; -webkit-appearance: none; background-image: none; }
+      .modal-select:focus-visible { outline: none; box-shadow: 0 0 0 1px rgba(15, 23, 42, 1), 0 0 0 2px rgba(56, 189, 248, 0.9); }
+      .toggle-checkbox:checked { right: 0; border-color: #10b981; }
+      .toggle-checkbox:checked + .toggle-label { background-color: #10b981; }
+    </style>
+  </head>
+  <body class="antialiased text-slate-50 font-medium">
+    
+    <div id="auth-view" class="min-h-screen flex items-center justify-center px-4 sm:px-6">
+      <div class="max-w-md w-full relative">
+        <div class="absolute -inset-[1.5px] rounded-3xl bg-gradient-to-r from-emerald-400/70 via-sky-400/70 to-fuchsia-500/70 opacity-80 blur-md"></div>
+        <div class="relative glass-panel rounded-3xl px-6 py-6 sm:px-8 sm:py-8">
+          <div class="mb-5 text-center">
+            <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-800 dark:text-slate-50">MEGOGO Lunch</h1>
+            <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Внутрішня система бронювання обідів</p>
+          </div>
+
+          <form id="login-form" class="space-y-4">
+            <div class="space-y-1.5">
+              <label class="text-xs font-semibold text-slate-700 dark:text-slate-200">ViciDial ID</label>
+              <input id="login-viciId" type="text" required class="w-full text-sm rounded-lg bg-white/50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-600/80 px-3 py-2 text-slate-900 dark:text-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-400/70" placeholder="Напр. 1050" />
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-xs font-semibold text-slate-700 dark:text-slate-200">Пароль</label>
+              <input id="login-password" type="password" required class="w-full text-sm rounded-lg bg-white/50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-600/80 px-3 py-2 text-slate-900 dark:text-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-400/70" placeholder="Ваш пароль" />
+            </div>
+            <button type="submit" id="btn-login" class="w-full mt-1 inline-flex justify-center items-center rounded-lg bg-gradient-to-r from-emerald-400 via-sky-400 to-fuchsia-500 px-4 py-2.5 text-sm font-bold tracking-[0.14em] uppercase text-slate-900 shadow-[0_18px_40px_rgba(15,23,42,0.95)] hover:scale-[1.02] transition-transform">Увійти</button>
+          </form>
+
+          <form id="register-form" class="space-y-4 hidden">
+            <div class="space-y-1.5">
+              <label class="text-xs font-semibold text-slate-700 dark:text-slate-200">Имя</label>
+              <input id="reg-name" type="text" required class="w-full text-sm rounded-lg bg-white/50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-600/80 px-3 py-2 text-slate-900 dark:text-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-400/70" placeholder="Напр. Костянтин" />
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-xs font-semibold text-slate-700 dark:text-slate-200">Фамилия</label>
+              <input id="reg-surname" type="text" required class="w-full text-sm rounded-lg bg-white/50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-600/80 px-3 py-2 text-slate-900 dark:text-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-400/70" placeholder="Напр. Сапожников" />
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-xs font-semibold text-slate-700 dark:text-slate-200">ViciDial ID</label>
+              <input id="reg-viciId" type="text" required class="w-full text-sm rounded-lg bg-white/50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-600/80 px-3 py-2 text-slate-900 dark:text-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-400/70" placeholder="Напр. 1050" />
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-xs font-semibold text-slate-700 dark:text-slate-200">Пароль</label>
+              <input id="reg-password" type="password" required class="w-full text-sm rounded-lg bg-white/50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-600/80 px-3 py-2 text-slate-900 dark:text-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-400/70" placeholder="Придумайте пароль" />
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-xs font-semibold text-slate-700 dark:text-slate-200">Повторите пароль</label>
+              <input id="reg-password-repeat" type="password" required class="w-full text-sm rounded-lg bg-white/50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-600/80 px-3 py-2 text-slate-900 dark:text-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-400/70" placeholder="Повторите пароль" />
+            </div>
+            <button type="submit" id="btn-register" class="w-full mt-1 inline-flex justify-center items-center rounded-lg bg-gradient-to-r from-emerald-400 via-sky-400 to-fuchsia-500 px-4 py-2.5 text-sm font-bold tracking-[0.14em] uppercase text-slate-900 shadow-[0_18px_40px_rgba(15,23,42,0.95)] hover:scale-[1.02] transition-transform">Створити акаунт</button>
+          </form>
+
+          <div class="mt-5 text-center text-xs font-semibold">
+            <button id="auth-toggle" type="button" class="text-sky-600 dark:text-sky-300 hover:underline">Немає акаунту? Зареєструватися</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="app-root" class="min-h-screen flex flex-col hidden opacity-0 transition-opacity duration-300">
+      <div id="sync-loader" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-[200] bg-sky-500 text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-lg hidden items-center gap-2">
+        <span class="animate-spin">⏳</span> <span id="sync-loader-text">З'єднання з базою...</span>
+      </div>
+
+      <header class="px-4 sm:px-6 pt-3 pb-3 flex flex-wrap items-center justify-between gap-3 sm:gap-4 bg-white/80 dark:bg-slate-900/50 backdrop-blur-xl border-b border-slate-200/80 dark:border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_18px_40px_rgba(15,23,42,0.95)] z-40 w-full">
+        <div class="flex items-center gap-2 shrink-0">
+          <div id="header-title-block" class="space-y-0.5 cursor-pointer select-none" title="Клікніть 3 рази для панелі Адміна">
+            <p class="text-[10px] tracking-[0.3em] uppercase text-slate-500 dark:text-slate-300/70 font-bold">Внутрішній інструмент</p>
+            <h1 class="text-xl font-bold tracking-tight text-slate-800 dark:text-slate-50">MEGOGO Lunch</h1>
+          </div>
+          <button id="open-rules" class="flex items-center justify-center w-6 h-6 rounded-full border border-slate-300 dark:border-slate-500 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0">
+            <span class="font-serif italic font-bold text-xs">i</span>
+          </button>
+          <button id="btn-open-admin" class="hidden items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-colors text-[10px] font-bold uppercase tracking-wider border border-rose-500/20 shrink-0">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Адмін</span>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto">
+          <div class="relative">
+            <div id="profile-btn" class="flex items-center gap-3 rounded-full bg-slate-100/90 dark:bg-slate-900/50 border border-slate-200/80 dark:border-white/10 px-3.5 py-1.5 shadow-lg backdrop-blur-xl cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+              <div class="relative">
+                <div id="profile-avatar-bg" class="h-8 w-8 rounded-full bg-gradient-to-br from-sky-400 to-fuchsia-500 flex items-center justify-center text-xs font-bold text-slate-900">О</div>
+                <span class="absolute -right-0.5 -bottom-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 border border-white dark:border-slate-900"></span>
+              </div>
+              <div class="leading-tight text-right pr-1">
+                <div class="text-xs font-bold text-slate-800 dark:text-slate-50"><span id="profile-name">Оператор</span></div>
+                <div id="live-clock" class="text-[10px] font-bold tracking-[0.16em] text-emerald-600 dark:text-emerald-400 font-mono">--:--:--</div>
+              </div>
+            </div>
+
+            <div id="profile-dropdown" class="absolute right-0 mt-2 w-56 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl opacity-0 pointer-events-none transform -translate-y-2 transition-all duration-200 z-50">
+              <div class="p-3 border-b border-slate-100 dark:border-slate-700">
+                <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Налаштування</p>
+              </div>
+              <div class="p-2 flex flex-col gap-1">
+                <button id="logout-btn" class="w-full text-left p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/30 text-rose-500 text-sm font-medium transition-colors mb-1">🚪 Вийти з акаунту</button>
+                <div class="border-t border-slate-200 dark:border-slate-700 mb-1"></div>
+                <label class="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer">
+                  <span class="text-sm text-slate-700 dark:text-slate-200 font-medium flex items-center gap-2"><span id="theme-icon-label">🌙</span> Темна тема</span>
+                  <div class="relative inline-block w-10 align-middle select-none">
+                    <input type="checkbox" id="theme-toggle-switch" checked class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 border-slate-300 dark:border-slate-600 appearance-none cursor-pointer transition-transform duration-200"/>
+                    <label for="theme-toggle-switch" class="toggle-label block overflow-hidden h-5 rounded-full bg-slate-300 dark:bg-slate-600 cursor-pointer"></label>
+                  </div>
+                </label>
+                <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 text-center mt-4 pb-2 uppercase tracking-wider">made by Fomichov Serhii</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="flex-1 px-4 sm:px-8 pb-6 pt-4 relative z-10">
+        <div class="glass-panel h-full max-h-full">
+          <div class="h-full overflow-hidden flex flex-col">
+            <!-- Current Status Dashboard -->
+            <section id="queue-status" class="border-b border-slate-200/80 dark:border-slate-700/60 px-4 sm:px-6 py-3 sm:py-4">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <p class="text-[11px] font-bold tracking-[0.16em] uppercase text-slate-500 dark:text-slate-300/80">Поточний стан</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Керування чергою обідів та перерв в реальному часі</p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button id="queue-refresh-btn" class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 dark:border-slate-600/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600 dark:text-slate-200 bg-white/70 dark:bg-slate-900/60 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                    <i class="fa-solid fa-rotate-right text-xs"></i>
+                    <span>Оновити</span>
+                  </button>
+                </div>
+              </div>
+              <div class="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3" id="queue-status-cards">
+                <div id="shift-duration-card" class="rounded-2xl bg-slate-50/80 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-700/80 px-3 py-2.5 flex flex-col gap-0.5 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors relative group">
+                  <span class="text-[10px] font-semibold tracking-[0.16em] uppercase text-slate-500 dark:text-slate-400">Тривалість зміни</span>
+                  <span id="shift-duration" class="text-sm font-bold text-slate-900 dark:text-slate-50">--:--</span>
+                  <i class="fa-solid fa-pen absolute top-3 right-3 text-[10px] text-slate-400 opacity-50 group-hover:opacity-100 transition-opacity"></i>
+                </div>
+                <div id="allowed-time-card" class="rounded-2xl bg-slate-50/80 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-700/80 px-3 py-2.5 flex flex-col gap-0.5 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors relative group">
+                  <span class="text-[10px] font-semibold tracking-[0.16em] uppercase text-sky-500 dark:text-sky-400">Дозволений час</span>
+                  <span id="allowed-time" class="text-sm font-bold text-slate-900 dark:text-slate-50">-- хв</span>
+                  <i class="fa-solid fa-circle-info absolute top-3 right-3 text-[10px] text-slate-400 opacity-50 group-hover:opacity-100 transition-opacity"></i>
+                </div>
+                <div class="rounded-2xl bg-slate-50/80 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-700/80 px-3 py-2.5 flex flex-col gap-0.5">
+                  <span class="text-[10px] font-semibold tracking-[0.16em] uppercase text-emerald-500 dark:text-emerald-400">Використано</span>
+                  <span id="used-time" class="text-sm font-bold text-emerald-600 dark:text-emerald-400">0 хв</span>
+                </div>
+                <div class="rounded-2xl bg-slate-50/80 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-700/80 px-3 py-2.5 flex flex-col gap-0.5">
+                  <span class="text-[10px] font-semibold tracking-[0.16em] uppercase text-amber-500 dark:text-amber-400">Залишилось</span>
+                  <span id="remaining-time" class="text-sm font-bold text-amber-600 dark:text-amber-400">-- хв</span>
+                </div>
+              </div>
+              <div class="mt-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-sky-500/10 to-fuchsia-500/10 border border-emerald-400/30 dark:border-emerald-400/40 px-3 sm:px-4 py-3 sm:py-3.5 flex flex-col sm:flex-row sm:items-center gap-2.5">
+                <div class="flex-1">
+                  <p class="text-[11px] font-bold tracking-[0.16em] uppercase text-emerald-500 dark:text-emerald-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-clock text-xs"></i>
+                    <span>Запит на перерву</span>
+                  </p>
+                  <p class="text-xs text-slate-600 dark:text-slate-300 mt-1">Вкажіть тривалість та тип черги. Система автоматично перевірить обмеження.</p>
+                </div>
+                <form id="join-queue-form" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5">
+                  <div class="flex items-center gap-1.5">
+                    <select id="request-minutes" class="modal-select w-[5.5rem] rounded-lg border border-slate-300 dark:border-slate-600/80 bg-white/80 dark:bg-slate-900/80 px-2 py-1.5 text-xs font-medium text-slate-900 dark:text-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-400/70 transition-opacity">
+                      <option value="15">15 хв</option>
+                      <option value="30">30 хв</option>
+                    </select>
+                    <select id="queue-type" class="modal-select w-28 rounded-lg border border-slate-300 dark:border-slate-600/80 bg-white/80 dark:bg-slate-900/80 px-2.5 py-1.5 text-xs font-medium text-slate-900 dark:text-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-400/70">
+                      <option value="1">Обід / Перерва</option>
+                    </select>
+                  </div>
+                  <button id="join-queue-btn" type="submit" class="inline-flex items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-400 via-sky-400 to-fuchsia-500 px-4 py-1.5 text-[11px] font-bold tracking-[0.16em] uppercase text-slate-900 shadow-[0_10px_30px_rgba(15,23,42,0.95)] hover:scale-[1.02] transition-transform">
+                    <i class="fa-solid fa-user-plus text-xs"></i>
+                    <span>Стати в чергу</span>
+                  </button>
+                </form>
+              </div>
+            </section>
+
+            <!-- Queue Content -->
+            <section id="queue-content" class="flex-1 px-4 sm:px-6 pb-4 pt-3 overflow-hidden">
+              <div class="h-full flex flex-col lg:flex-row gap-4">
+                <!-- Active Now -->
+                <div class="flex-1 min-h-[220px] rounded-2xl bg-slate-50/80 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col overflow-hidden">
+                  <div class="px-4 py-2.5 border-b border-slate-200/80 dark:border-slate-700/70 flex items-center justify-between gap-2">
+                    <div>
+                      <p class="text-[11px] font-bold tracking-[0.16em] uppercase text-slate-500 dark:text-slate-300/80">Активні зараз</p>
+                      <p id="active-limits-hint" class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">До 2 на обіді, 1 на короткій перерві.</p>
+                    </div>
+                    <div class="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400">
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500">
+                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Live
+                      </span>
+                    </div>
+                  </div>
+                  <div class="flex-1 overflow-y-auto scrollbar-thin" id="active-queue-list">
+                    <div class="flex items-center justify-center h-full text-xs text-slate-500 dark:text-slate-400 font-medium px-4 py-6">
+                      Дані завантажуються...
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Waiting List -->
+                <div class="flex-1 min-h-[220px] rounded-2xl bg-slate-50/80 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-700/80 shadow-sm flex flex-col overflow-hidden">
+                  <div class="px-4 py-2.5 border-b border-slate-200/80 dark:border-slate-700/70 flex items-center justify-between gap-2">
+                    <div>
+                      <p class="text-[11px] font-bold tracking-[0.16em] uppercase text-slate-500 dark:text-slate-300/80">Черга очікування</p>
+                      <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Упорядковано за часом входу до черги</p>
+                    </div>
+                  </div>
+                  <div class="flex-1 overflow-y-auto scrollbar-thin" id="waiting-queue-list">
+                    <div class="flex items-center justify-center h-full text-xs text-slate-500 dark:text-slate-400 font-medium px-4 py-6">
+                      Дані завантажуються...
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Legacy time-grid views are kept hidden for compatibility but no longer used -->
+            <div class="hidden opacity-0 pointer-events-none" aria-hidden="true">
+              <div id="grid-view" class="flex flex-col h-full transition-opacity duration-200 opacity-0 pointer-events-none hidden">
+                <div id="grid-scroll-container" class="flex-1 overflow-auto min-h-0 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700/70 scrollbar-track-transparent relative">
+                  <div id="grid-root" class="relative inline-grid p-2 gap-[3px] min-w-max">
+                    <div class="sticky top-0 left-0 z-30 col-span-1 row-span-1 flex flex-col justify-center gap-1 px-3 py-2 rounded-md bg-white/90 dark:bg-slate-950/95 backdrop-blur-md border border-slate-200 dark:border-slate-600/60 shadow-sm dark:shadow-none">
+                      <button id="jump-to-now" type="button" class="self-start text-[11px] font-bold text-sky-500 dark:text-sky-400 hover:text-sky-600 dark:hover:text-sky-300 flex items-center gap-1 tracking-wider uppercase">
+                        <span>🎯</span><span>Наразі</span>
+                      </button>
+                    </div>
+                    <div id="time-header-wrap" class="contents"></div>
+                    <div id="grid-body-wrap" class="contents"></div>
+                    <div id="current-time-line" class="pointer-events-none absolute top-0 bottom-0 w-[2px] bg-red-500/90 opacity-0 transition-opacity duration-150 z-25">
+                      <div class="absolute -top-1 left-1/2 -translate-x-1/2 h-2 w-2 rounded-full bg-red-500"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div id="list-view" class="flex flex-col h-full transition-opacity duration-200 opacity-0 pointer-events-none hidden">
+                <div class="flex items-center justify-between border-b border-slate-200 dark:border-white/5 px-6 py-3">
+                  <p class="text-[11px] font-bold tracking-[0.16em] uppercase text-slate-500 dark:text-slate-300/80">Денний огляд</p>
+                </div>
+                <div class="flex-1 flex px-6 pb-4 pt-3 overflow-hidden">
+                  <div id="vertical-scroller" class="flex-1 flex gap-4 overflow-y-auto pr-2 scrollbar-thin">
+                    <div id="vertical-time-axis" class="w-16 shrink-0 relative"></div>
+                    <div class="flex-1 relative rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 shadow-sm overflow-hidden">
+                      <div id="vertical-canvas" class="relative w-full">
+                        <div id="vertical-lines" class="absolute inset-0 pointer-events-none"></div>
+                        <div id="vertical-events" class="absolute inset-0"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </main>
+
+      <div id="booking-modal-overlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/40 dark:bg-slate-950/70 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-200">
+        <div class="relative max-w-md w-full mx-4 glass-panel p-6">
+          <h2 class="text-xl font-bold text-slate-800 dark:text-slate-50 mb-4">Бронювання обіду</h2>
+          <div class="space-y-4">
+            <div class="space-y-1.5">
+              <label class="text-xs font-semibold text-slate-700 dark:text-slate-200">Оператор</label>
+              <select id="operator-select" class="modal-select w-full text-sm font-medium rounded-lg bg-white/50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-600/80 px-3 py-2 text-slate-900 dark:text-slate-50"></select>
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-xs font-semibold text-slate-700 dark:text-slate-200">Час початку</label>
+              <select id="time-select" class="modal-select w-full text-sm font-medium rounded-lg bg-white/50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-600/80 px-3 py-2 text-slate-900 dark:text-slate-50"></select>
+            </div>
+            <div class="space-y-1.5">
+              <label class="text-xs font-semibold text-slate-700 dark:text-slate-200">Тривалість</label>
+              <select id="duration-select" class="modal-select w-full text-sm font-medium rounded-lg bg-white/50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-600/80 px-3 py-2 text-slate-900 dark:text-slate-50">
+                <option value="15">15 хвилин</option>
+                <option value="30">30 хвилин</option>
+                <option value="45">45 хвилин</option>
+              </select>
+            </div>
+          </div>
+          <div class="mt-6 flex justify-end gap-3">
+            <button id="booking-cancel" class="px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-700 dark:text-slate-200 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors">Скасувати</button>
+            <button id="booking-save" class="px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-900 bg-gradient-to-r from-emerald-400 to-sky-400 hover:scale-105 transition-transform">Зберегти</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="shift-modal-overlay" class="fixed inset-0 z-[102] flex items-center justify-center bg-slate-950/40 dark:bg-slate-950/70 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-200">
+        <div class="relative max-w-md w-full mx-4 glass-panel p-6 bg-white dark:bg-slate-900">
+          <h2 class="text-xl font-bold text-slate-800 dark:text-slate-50 mb-4 flex items-center gap-2">
+            <span>🕒</span> Налаштування зміни
+          </h2>
+
+          <div class="space-y-3">
+            <div>
+              <p class="text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-[0.16em] mb-1.5">Швидкий вибір</p>
+              <div id="shift-quick-grid" class="grid grid-cols-3 gap-2">
+                <button type="button" class="shift-quick-btn px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100/60 dark:bg-slate-800/50 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-sky-50 hover:border-sky-300 dark:hover:bg-sky-900/30 transition-colors" data-hours="8">8 год</button>
+                <button type="button" class="shift-quick-btn px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100/60 dark:bg-slate-800/50 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-sky-50 hover:border-sky-300 dark:hover:bg-sky-900/30 transition-colors" data-hours="9">9 год</button>
+                <button type="button" class="shift-quick-btn px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100/60 dark:bg-slate-800/50 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-sky-50 hover:border-sky-300 dark:hover:bg-sky-900/30 transition-colors" data-hours="10">10 год</button>
+                <button type="button" class="shift-quick-btn px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100/60 dark:bg-slate-800/50 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-sky-50 hover:border-sky-300 dark:hover:bg-sky-900/30 transition-colors" data-hours="11">11 год</button>
+                <button type="button" class="shift-quick-btn px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100/60 dark:bg-slate-800/50 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-sky-50 hover:border-sky-300 dark:hover:bg-sky-900/30 transition-colors" data-hours="12">12 год</button>
+                <button type="button" class="shift-quick-btn px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100/60 dark:bg-slate-800/50 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-sky-50 hover:border-sky-300 dark:hover:bg-sky-900/30 transition-colors" data-hours="13">13 год</button>
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <label for="shift-custom-hours" class="text-xs font-semibold text-slate-700 dark:text-slate-200">Або введіть вручну (год):</label>
+              <input id="shift-custom-hours" type="number" step="0.5" min="0" max="24" class="w-full text-sm rounded-lg bg-white/70 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-600/80 px-3 py-2 text-slate-900 dark:text-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-400/70" placeholder="Напр. 9 або 9.5" />
+            </div>
+          </div>
+
+          <div class="mt-6 flex justify-end gap-3">
+            <button id="shift-cancel" class="px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-700 dark:text-slate-200 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors">Скасувати</button>
+            <button id="shift-save" class="px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-900 bg-gradient-to-r from-emerald-400 to-sky-400 hover:scale-105 transition-transform">Зберегти</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="allowed-time-modal-overlay" class="fixed inset-0 z-[115] flex items-center justify-center bg-slate-950/60 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-200">
+        <div class="relative max-w-lg w-full mx-4 glass-panel p-6 bg-white dark:bg-slate-900">
+          <h2 class="text-xl font-bold text-sky-600 dark:text-sky-400 mb-4 flex items-center gap-2">
+            <span>⏱️</span> Правила використання перерв
+          </h2>
+          <p class="text-sm text-slate-700 dark:text-slate-300 font-medium mb-4">
+            Під час робочої зміни оператор має доступ до обідньої перерви та коротких брейків відповідно до тривалості зміни.
+          </p>
+          
+          <div class="space-y-4">
+            <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+              <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100 mb-2">Зміна 12 годин:</h3>
+              <ul class="space-y-1.5 text-sm text-slate-600 dark:text-slate-400 list-disc list-inside">
+                <li>2 обідні перерви по 30 хвилин</li>
+                <li>30 хвилин брейку за зміну (можна використати як 2 перерви по 15 хвилин або розділити на коротші перерви)</li>
+              </ul>
+            </div>
+
+            <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+              <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100 mb-2">Зміна 9 годин:</h3>
+              <ul class="space-y-1.5 text-sm text-slate-600 dark:text-slate-400 list-disc list-inside">
+                <li>1 обідня перерва 30 хвилин</li>
+                <li>30 хвилин брейку за зміну (можна використати як 2 перерви по 15 хвилин або розділити на коротші перерви)</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="mt-6 flex justify-center">
+            <button id="close-allowed-time" class="px-6 py-2 rounded-lg text-xs font-bold uppercase text-white bg-sky-500 hover:bg-sky-600 transition-colors">Зрозуміло</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="rules-modal-overlay" class="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/60 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-200">
+        <div class="relative max-w-2xl w-full mx-4 glass-panel p-6 bg-white dark:bg-slate-900">
+          <h2 class="text-xl font-bold text-sky-600 dark:text-sky-400 mb-4 flex items-center gap-2">
+            <span>❗️</span> Правила виходу в перерви
+          </h2>
+
+          <ul class="space-y-3 text-sm text-slate-700 dark:text-slate-300 font-medium list-none">
+            <li class="flex gap-2 items-start">
+              <span class="text-sky-500 mt-0.5">🔸</span> 
+              <div>Кількість людей, яким дозволено виходити в паузи регулюються Тім Лідом, котрий на зміні:<br><span class="font-bold text-sky-600 dark:text-sky-400">2+1</span> — позначає, що в ланч може вийти 2 людини, в брейк одна.</div>
+            </li>
+            <li class="flex gap-2 items-start">
+              <span class="text-sky-500 mt-0.5">🔸</span> 
+              <div>Перерви заборонені в першу та останню годину зміни.</div>
+            </li>
+            <li class="flex gap-2 items-start">
+              <span class="text-sky-500 mt-0.5">🔸</span> 
+              <div>Заборонено приймати <span class="font-bold uppercase">Lunch</span> одразу після <span class="font-bold uppercase">Break</span> (і навпаки).</div>
+            </li>
+            <li class="flex gap-2 items-start">
+              <span class="text-sky-500 mt-0.5">🔸</span> 
+              <div>Заборонено використовувати два статуси підряд. Наприклад, BREAK та BREAK.</div>
+            </li>
+            <li class="flex gap-2 items-start">
+              <span class="text-rose-500 mt-0.5">‼️</span> 
+              <div>Статус <span class="font-bold">“wc”</span> — це не повноцінний break, це пауза на 2-3 хв. Перед виходом в яку в чаті ОБОВ’ЯЗКОВО має бути повідомлення. 📨</div>
+            </li>
+            <li class="flex gap-2 items-start">
+              <span class="text-sky-500 mt-0.5">🔸</span> 
+              <div>Всі <span class="font-bold uppercase">Lunch</span> та <span class="font-bold uppercase">Break</span> регулюються цим сайтом.</div>
+            </li>
+          </ul>
+
+          <div class="mt-4 p-3 rounded-lg bg-sky-50 dark:bg-sky-900/20 border border-sky-100 dark:border-sky-800 text-sm text-slate-700 dark:text-slate-300">
+              Оператори тегають один одного для виходу на обід відповідно до черги на сайті. При цьому кількість тегів не має перевищувати кількість людей котрим дозволено вийти в ланч (якщо діє 2+2, то тегаємо не більше 2 людей).
+          </div>
+
+          <div class="mt-3 p-3 rounded-lg bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800 text-sm text-rose-700 dark:text-rose-300 font-semibold flex gap-2 items-center">
+              <span>⁉️</span> Якщо оператор не відповідає на тег протягом 5 хв, він автоматично пропускає свою чергу.
+          </div>
+
+          <p class="mt-4 text-sm text-slate-700 dark:text-slate-300 font-medium flex gap-2 items-start">
+              <span class="text-sky-500">🔹</span> 
+              <span>Будьте взаємно ввічливі при спілкуванні з колегами. Заборонено використовувати ненормативну лексику, некоректно висловлюватись в сторону колеги.</span>
+          </p>
+
+          <div class="mt-6 flex justify-center">
+            <button id="close-rules" class="px-6 py-2 rounded-lg text-xs font-bold uppercase text-white bg-sky-500 hover:bg-sky-600 transition-colors">Зрозуміло</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="admin-overlay" class="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/80 backdrop-blur-lg opacity-0 pointer-events-none transition-opacity duration-200">
+        <div class="glass-panel w-full max-w-3xl h-[80vh] mx-4 flex flex-col bg-slate-900 border border-slate-700 overflow-hidden relative">
+          <div class="p-5 pb-0 border-b border-slate-700 flex justify-between items-start bg-slate-900">
+            <div>
+              <h2 class="text-xl font-bold text-rose-500 mb-4">🛡️ Панель Адміністратора</h2>
+              <div class="flex gap-4 flex-wrap">
+                <button id="tab-btn-users" class="pb-2 text-sm font-bold text-rose-500 border-b-2 border-rose-500 transition-colors">Користувачі</button>
+                <button id="tab-btn-roles" class="pb-2 text-sm font-bold text-slate-400 hover:text-slate-200 border-b-2 border-transparent transition-colors">Права</button>
+                <button id="tab-btn-limits" class="pb-2 text-sm font-bold text-slate-400 hover:text-slate-200 border-b-2 border-transparent transition-colors">Ліміти</button>
+              </div>
+            </div>
+            <button id="close-admin" class="px-3 py-1.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-bold uppercase">Закрити</button>
+          </div>
+          <div class="flex-1 overflow-hidden relative bg-slate-900/50">
+            <div id="admin-users-tab" class="absolute inset-0 p-4 overflow-y-auto scrollbar-thin">
+               <div id="admin-users-list" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+            </div>
+            <div id="admin-roles-tab" class="absolute inset-0 p-4 overflow-y-auto scrollbar-thin hidden">
+              <div id="admin-roles-list" class="flex flex-col gap-3"></div>
+            </div>
+            <div id="admin-limits-tab" class="absolute inset-0 p-4 overflow-y-auto scrollbar-thin hidden">
+              <div id="admin-limits-list" class="flex flex-col gap-3"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="my-bookings-modal-overlay" class="fixed inset-0 z-[105] flex items-center justify-center bg-slate-950/40 dark:bg-slate-950/70 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-200">
+        <div class="relative max-w-md w-full mx-4 glass-panel p-6">
+          <h2 class="text-xl font-bold text-slate-800 dark:text-slate-50 mb-4">Мої активні бронювання</h2>
+          <div id="my-bookings-list" class="space-y-2 max-h-64 overflow-y-auto"></div>
+          <p id="my-bookings-empty" class="text-sm text-slate-500 dark:text-slate-400 font-medium py-4 hidden">У вас немає активних обідів</p>
+          <div class="mt-4 flex justify-end">
+            <button id="close-my-bookings" class="px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-700 dark:text-slate-200 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors">Закрити</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="toast-container" class="fixed top-4 right-4 z-[200] flex flex-col gap-2 pointer-events-none"></div>
+
+      <!-- Queue sounds -->
+      <audio id="sound-started" class="hidden" preload="auto"></audio>
+      <audio id="sound-used" class="hidden" preload="auto"></audio>
+      <audio id="sound-deleted" class="hidden" preload="auto"></audio>
+      <audio id="sound-skipped" class="hidden" preload="auto"></audio>
+      <audio id="sound-error" class="hidden" preload="auto"></audio>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        localStorage.removeItem("megogo_lunch_limits");
+        // === INITIALIZATION ORDER: Must be at top so completeAuth() and others can use them ===
+        let lastActionTime = 0;
+        let currentUserRole = localStorage.getItem("megogo_lunch_role") || "operator";
+
+        const appRoot = document.getElementById("app-root");
+        const authView = document.getElementById("auth-view");
+        const syncLoader = document.getElementById("sync-loader");
+        const syncLoaderText = document.getElementById("sync-loader-text");
+
+        let currentUserViciId = localStorage.getItem("megogo_queue_viciId") || "";
+        let currentUserName = localStorage.getItem("megogo_queue_name") || "";
+        let currentUserSurname = localStorage.getItem("megogo_queue_surname") || "";
+        let currentUserFullName = (String(currentUserSurname).trim() + " " + String(currentUserName).trim()).trim() || (localStorage.getItem("megogo_lunch_name") || "");
+        let employeeGroups = [];
+        let employeeThemes = {};
+        let currentView = "grid";
+        /** Names with role "admin" are hidden from grid and list view; only shown in Admin Panel Users/Rights. */
+        let adminNames = new Set();
+        /** Names with visibility "hidden" are excluded from the lunch grid for everyone. */
+        let hiddenNames = new Set();
+
+        async function fetchAdminNames() {
+          try {
+            const res = await fetch(`${GOOGLE_APP_URL}?type=get_users&_t=${Date.now()}`);
+            const json = await res.json();
+            console.log("GAS Response (fetchAdminNames):", json);
+            if (json.status === "success" && json.users && Array.isArray(json.users)) {
+              adminNames = new Set(json.users.filter(u => (u.role || "operator") === "admin").map(u => String(u.name != null ? u.name : "")));
+              hiddenNames = new Set(json.users.filter(u => u.hidden === true).map(u => String(u.name != null ? u.name : "")));
+            }
+          } catch (e) {}
+        }
+
+        // Replace with your new deployment URL from Google Apps Script (Deploy > Deploy as web app).
+        const GOOGLE_APP_URL = "https://script.google.com/macros/s/AKfycbw1aUHhGeefCNfoT6wv7RJTg_LN3X4yR2pmP8RTditTEQ7W1Sq7DrJ5sirifgGEGVST/exec";
+
+        // Цвета
+        function hexToRgba(hex, alpha) {
+          let value = hex.replace("#", "");
+          if (value.length === 3) value = value[0] + value[0] + value[1] + value[1] + value[2] + value[2];
+          const num = parseInt(value, 16);
+          return `rgba(${(num >> 16) & 255},${(num >> 8) & 255},${num & 255},${alpha})`;
+        }
+        const colors = ["#22c55e","#e11d48","#0ea5e9","#f97316","#a855f7","#06b6d4","#84cc16","#6366f1","#facc15","#ec4899"];
+        function getTheme(name) { 
+            let hash = 0; for(let i=0;i<name.length;i++) hash = name.charCodeAt(i) + ((hash << 5)-hash);
+            const idx = Math.abs(hash) % colors.length;
+            return { main: colors[idx], soft: hexToRgba(colors[idx], 0.24), glow: hexToRgba(colors[idx], 0.86) }; 
+        }
+
+        // ПАЛИТРА ДЛЯ ВЫБОРА СВОЕГО ЦВЕТА
+        // Legacy color picker (myPalette/color-picker) removed in queue version
+
+        const startM = 10*60, endM = 19*60+45;
+        const times = [];
+        for (let m = startM; m <= endM; m += 15) { times.push(`${String(Math.floor(m/60)).padStart(2,"0")}:${String(m%60).padStart(2,"0")}`); }
+        const startTimes = [];
+        for (let m = startM; m <= endM; m += 15) { startTimes.push({ label: `${String(Math.floor(m/60)).padStart(2,"0")}:${String(m%60).padStart(2,"0")}`, sIdx: (m-startM)/15 }); }
+
+        const gridRoot = document.getElementById("grid-root");
+        if (gridRoot) gridRoot.style.setProperty("--time-cols", times.length);
+
+        function updateLiveClock() {
+            const clockEl = document.getElementById("live-clock");
+            if(clockEl) {
+                const now = new Date();
+                const options = { timeZone: 'Europe/Kyiv', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+                clockEl.textContent = new Intl.DateTimeFormat('uk-UA', options).format(now);
+            }
+        }
+        setInterval(updateLiveClock, 1000); updateLiveClock();
+
+        function encodePass(str) { return btoa(unescape(encodeURIComponent(str))); }
+        function decodePass(str) { try { return decodeURIComponent(escape(atob(str))); } catch(e) { return str; } }
+
+        document.getElementById("auth-toggle").addEventListener("click", () => {
+          document.getElementById("login-form").classList.toggle("hidden"); document.getElementById("register-form").classList.toggle("hidden");
+          const isLogin = !document.getElementById("login-form").classList.contains("hidden");
+          document.getElementById("auth-toggle").textContent = isLogin ? "Немає акаунту? Зареєструватися" : "Вже є акаунт? Увійти";
+        });
+
+        document.getElementById("login-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById("btn-login"); btn.textContent = "Перевірка..."; btn.disabled = true;
+            const viciId = document.getElementById("login-viciId").value.trim();
+            const password = document.getElementById("login-password").value;
+            try {
+                const res = await fetch(`${GOOGLE_APP_URL}?type=login&viciId=${encodeURIComponent(viciId)}&password=${encodeURIComponent(password)}&_t=${Date.now()}`);
+                const json = await res.json();
+                console.log("GAS Response (login):", json);
+                if(json.status === "success") {
+                    const name = String(json.name || json.firstName || "").trim();
+                    const surname = String(json.surname || json.lastName || "").trim();
+                    localStorage.setItem("megogo_queue_viciId", viciId);
+                    localStorage.setItem("megogo_queue_name", name);
+                    localStorage.setItem("megogo_queue_surname", surname);
+                    currentUserViciId = viciId;
+                    currentUserName = name;
+                    currentUserSurname = surname;
+                    currentUserFullName = (surname + " " + name).trim() || (json.fullName || json.name || "Оператор");
+                    if (json.role) {
+                      localStorage.setItem("megogo_lunch_role", json.role);
+                      currentUserRole = json.role;
+                    }
+                    completeAuth();
+                    showToast(json.msg || "Успешно", "success");
+                } else if (json.status === "fail") { showToast(json.msg, "error"); }
+                else { showToast(json.msg || "Помилка входу", "error"); }
+            } catch(e) { showToast("Помилка з'єднання", "error"); }
+            btn.textContent = "Увійти"; btn.disabled = false;
+        });
+
+        document.getElementById("register-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById("btn-register"); btn.textContent = "Збереження..."; btn.disabled = true;
+            const name = document.getElementById("reg-name").value.trim();
+            const surname = document.getElementById("reg-surname").value.trim();
+            const viciId = document.getElementById("reg-viciId").value.trim();
+            const password = document.getElementById("reg-password").value;
+            const passwordRepeat = document.getElementById("reg-password-repeat").value;
+
+            if (!name || !surname || !viciId || !password || !passwordRepeat) {
+              showToast("Заповніть всі поля", "error");
+              btn.textContent = "Створити акаунт"; btn.disabled = false;
+              return;
+            }
+            if (password !== passwordRepeat) {
+              showToast("Паролі не співпадають", "error");
+              btn.textContent = "Створити акаунт"; btn.disabled = false;
+              return;
+            }
+            
+            try {
+                const res = await fetch(`${GOOGLE_APP_URL}?type=register&name=${encodeURIComponent(name)}&surname=${encodeURIComponent(surname)}&viciId=${encodeURIComponent(viciId)}&password=${encodeURIComponent(password)}&_t=${Date.now()}`);
+                const json = await res.json();
+                console.log("GAS Response (register):", json);
+                if(json.status === "success") {
+                    localStorage.setItem("megogo_queue_viciId", viciId);
+                    localStorage.setItem("megogo_queue_name", name);
+                    localStorage.setItem("megogo_queue_surname", surname);
+                    currentUserViciId = viciId;
+                    currentUserName = name;
+                    currentUserSurname = surname;
+                    if (json.role) {
+                      localStorage.setItem("megogo_lunch_role", json.role);
+                      currentUserRole = json.role;
+                    }
+                    currentUserFullName = (surname + " " + name).trim();
+                    completeAuth();
+                    showToast(json.msg || "Успешно", "success");
+                } else if (json.status === "fail") { showToast(json.msg, "error"); }
+                else { showToast(json.msg || "Помилка реєстрації", "error"); }
+            } catch(e) { showToast("Помилка з'єднання", "error"); }
+            btn.textContent = "Створити акаунт"; btn.disabled = false;
+        });
+
+        document.getElementById("logout-btn").addEventListener("click", () => {
+            localStorage.removeItem("megogo_queue_viciId");
+            localStorage.removeItem("megogo_queue_name");
+            localStorage.removeItem("megogo_queue_surname");
+            localStorage.removeItem("megogo_lunch_name");
+            localStorage.removeItem("megogo_lunch_mycolor");
+            localStorage.removeItem("megogo_lunch_email");
+            localStorage.removeItem("megogo_lunch_role");
+            location.reload();
+        });
+
+        const gridBodyWrap = document.getElementById("grid-body-wrap");
+        let departmentFilter = "all";
+
+        function applyBookingsFromServer(bookings) {
+          try {
+            if (!bookings || !Array.isArray(bookings)) return;
+            const groups = Array.isArray(employeeGroups) ? employeeGroups : [];
+            const allEmps = new Set(groups.flatMap(g => (g && Array.isArray(g.employees)) ? g.employees : []));
+            const bookedSet = new Set(bookings.map(b => `${b.employee}|${b.time}`));
+            if (!gridBodyWrap) return;
+            gridBodyWrap.querySelectorAll(".slot-cell").forEach(slot => {
+              const key = `${slot.dataset.employee}|${slot.dataset.time}`;
+              const shouldBeBooked = bookedSet.has(key) && allEmps.has(slot.dataset.employee);
+              const isBooked = slot.classList.contains("slot-booked");
+              if (shouldBeBooked && !isBooked) { slot.classList.add("slot-booked"); updateSlotTooltip(slot); }
+              else if (!shouldBeBooked && isBooked) { slot.classList.remove("slot-booked"); updateSlotTooltip(slot); }
+            });
+          } catch (e) {
+            console.error("applyBookingsFromServer error:", e);
+            localStorage.clear();
+            location.reload();
+          }
+        }
+
+        function saveBookingsToStorage() {
+          const filtered = departmentFilter === "all" ? employeeGroups : employeeGroups.filter(g => g.label === departmentFilter);
+          const filteredEmps = new Set(filtered.flatMap(g => g.employees));
+          let existing = [];
+          try {
+            const raw = localStorage.getItem("megogo_lunch_bookings");
+            if (raw) existing = JSON.parse(raw);
+          } catch (e) {}
+          const fromDom = [];
+          gridBodyWrap.querySelectorAll(".slot-cell.slot-booked").forEach(slot => {
+            fromDom.push({ employee: slot.dataset.employee, time: slot.dataset.time });
+          });
+          const merged = existing.filter(b => !filteredEmps.has(b.employee)).concat(fromDom);
+          localStorage.setItem("megogo_lunch_bookings", JSON.stringify(merged));
+        }
+
+        async function fetchAndApplyData() {
+          try {
+            const ctrl = new AbortController();
+            const tid = setTimeout(() => ctrl.abort(), 45000);
+            const res = await fetch(`${GOOGLE_APP_URL}?type=read_init&_t=${Date.now()}`, { signal: ctrl.signal });
+            clearTimeout(tid);
+            const json = await res.json();
+            console.log("GAS Response (read_init):", json);
+            if (json.status === "success") {
+              employeeGroups = json.groups || [];
+              const adminSource = (json.adminNames && Array.isArray(json.adminNames)) ? json.adminNames : (json.excludeNames && Array.isArray(json.excludeNames)) ? json.excludeNames : null;
+              if (adminSource) {
+                adminNames = new Set(adminSource);
+              } else if (json.userRoles && typeof json.userRoles === "object") {
+                adminNames = new Set(Object.keys(json.userRoles).filter(n => json.userRoles[n] === "admin"));
+              } else {
+                await fetchAdminNames();
+              }
+              if (json.hiddenNames && Array.isArray(json.hiddenNames)) {
+                hiddenNames = new Set(json.hiddenNames);
+              } else {
+                await fetchAdminNames();
+              }
+              localStorage.setItem("megogo_lunch_groups", JSON.stringify(employeeGroups));
+              localStorage.setItem("megogo_lunch_bookings", JSON.stringify(json.bookings != null ? json.bookings : []));
+              let limitsArr = Array.isArray(json.limits) ? json.limits : [];
+              if (limitsArr.length === 0 && json.limits != null && typeof json.limits === "object" && !Array.isArray(json.limits)) {
+                const obj = json.limits;
+                const slotCount = 44;
+                limitsArr = Array.from({ length: slotCount }, (_, i) => {
+                  const h = 10 + Math.floor(i / 4);
+                  const v = obj[h] ?? obj[String(h)] ?? obj[String(h).padStart(2, "0") + ":00"] ?? 0;
+                  return Number(v) || 0;
+                });
+              }
+              if (limitsArr.length === 0) {
+                try {
+                  const limRes = await fetch(`${GOOGLE_APP_URL}?type=get_manual_limits&_t=${Date.now()}`);
+                  const limJson = await limRes.json().catch(() => ({}));
+                  const raw = (limJson && limJson.limits != null) ? limJson.limits : null;
+                  if (raw != null) {
+                    if (Array.isArray(raw)) {
+                      const numHours = Math.ceil(times.length / 4);
+                      limitsArr = raw.length <= numHours
+                        ? Array.from({ length: times.length }, (_, i) => Number(raw[Math.floor(i / 4)]) || 0)
+                        : raw.slice(0, times.length).map(v => Number(v) || 0);
+                    } else if (typeof raw === "object") {
+                      const slotCount = 44;
+                      limitsArr = Array.from({ length: slotCount }, (_, i) => {
+                        const h = 10 + Math.floor(i / 4);
+                        return Number(raw[h] ?? raw[String(h)] ?? raw[String(h).padStart(2, "0") + ":00"] ?? 0) || 0;
+                      });
+                    }
+                  }
+                } catch (e) { console.warn("get_manual_limits fallback failed:", e); }
+              }
+              if (limitsArr.length < times.length) {
+                const numHours = Math.ceil(times.length / 4);
+                limitsArr = limitsArr.length <= numHours
+                  ? Array.from({ length: times.length }, (_, i) => Number(limitsArr[Math.floor(i / 4)]) || 0)
+                  : [...limitsArr.map(v => Number(v) || 0), ...new Array(times.length - limitsArr.length).fill(0)];
+              } else {
+                limitsArr = limitsArr.slice(0, times.length).map(v => Number(v) || 0);
+              }
+              json.limits = limitsArr;
+              localStorage.setItem("megogo_lunch_limits", JSON.stringify(limitsArr));
+              console.log("Final Limits Array for Grid:", json.limits);
+              buildGrid(json);
+              applyBookingsFromServer(json.bookings != null ? json.bookings : []);
+              if (currentView === "list") renderVerticalView();
+              return true;
+            }
+          } catch (e) {
+            console.error("Помилка завантаження:", e);
+            try { localStorage.removeItem("megogo_lunch_groups"); localStorage.removeItem("megogo_lunch_bookings"); localStorage.removeItem("megogo_lunch_limits"); } catch (e2) {}
+          }
+          return false;
+        }
+
+        async function silentSyncWithServer() {
+          if (document.visibilityState !== "visible") return;
+          if (Date.now() - lastActionTime < 15000) return;
+          if (!currentUserFullName || appRoot.classList.contains("hidden")) return;
+          const ok = await fetchAndApplyData();
+          if (ok && currentView === "list") renderVerticalView();
+        }
+
+        async function completeAuth() {
+          localStorage.removeItem("megogo_lunch_groups");
+          localStorage.removeItem("megogo_lunch_bookings");
+          localStorage.removeItem("megogo_lunch_limits");
+          employeeGroups = [];
+          authView.classList.add("hidden");
+          appRoot.classList.remove("hidden");
+          requestAnimationFrame(() => appRoot.classList.remove("opacity-0"));
+          document.getElementById("profile-name").textContent = currentUserFullName || "Оператор";
+          const adminBtn = document.getElementById("btn-open-admin");
+          if (adminBtn) {
+            if (currentUserRole === "admin") {
+              adminBtn.classList.remove("hidden");
+              adminBtn.classList.add("flex");
+            } else {
+              adminBtn.classList.add("hidden");
+              adminBtn.classList.remove("flex");
+            }
+          }
+          const headerTitleBlock = document.getElementById("header-title-block");
+          if (headerTitleBlock) {
+            headerTitleBlock.title = "";
+            headerTitleBlock.style.cursor = "default";
+          }
+          await fetchAdminNames();
+          try {
+            buildGrid();
+          } catch (e) {
+            console.error("buildGrid error:", e);
+            localStorage.clear();
+            location.reload();
+            return;
+          }
+          try {
+            applyBookingsFromServer([]);
+          } catch (e) {
+            console.error("applyBookingsFromServer error:", e);
+            localStorage.clear();
+            location.reload();
+            return;
+          }
+          if (currentView === "list") renderVerticalView();
+
+          syncLoaderText.textContent = "Синхронізація...";
+          syncLoader.classList.remove("hidden");
+          syncLoader.classList.add("flex");
+
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 45000);
+            const res = await fetch(`${GOOGLE_APP_URL}?type=read_init&_t=${Date.now()}`, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            const json = await res.json();
+            console.log("GAS Response (completeAuth read_init):", json);
+            if (json.status === "success") {
+              employeeGroups = json.groups || [];
+              const adminSource = (json.adminNames && Array.isArray(json.adminNames)) ? json.adminNames : (json.excludeNames && Array.isArray(json.excludeNames)) ? json.excludeNames : null;
+              if (adminSource) {
+                adminNames = new Set(adminSource);
+              } else if (json.userRoles && typeof json.userRoles === "object") {
+                adminNames = new Set(Object.keys(json.userRoles).filter(n => json.userRoles[n] === "admin"));
+              } else {
+                await fetchAdminNames();
+              }
+              if (json.hiddenNames && Array.isArray(json.hiddenNames)) {
+                hiddenNames = new Set(json.hiddenNames);
+              } else {
+                await fetchAdminNames();
+              }
+              localStorage.setItem("megogo_lunch_groups", JSON.stringify(employeeGroups));
+              localStorage.setItem("megogo_lunch_bookings", JSON.stringify(json.bookings != null ? json.bookings : []));
+              const limitsArr = Array.isArray(json.limits) ? json.limits : [];
+              const paddedLimits = limitsArr.length >= times.length ? limitsArr.slice(0, times.length) : [...limitsArr, ...new Array(Math.max(0, times.length - limitsArr.length)).fill(0)];
+              localStorage.setItem("megogo_lunch_limits", JSON.stringify(paddedLimits));
+              buildGrid(json);
+              applyBookingsFromServer(json.bookings != null ? json.bookings : []);
+              if (currentView === "list") renderVerticalView();
+            }
+          } catch (e) {
+            console.error("completeAuth fetch error:", e);
+            if (employeeGroups.length === 0) showToast("Не вдалося завантажити дані. Спробуйте оновити сторінку.", "error");
+            try { localStorage.removeItem("megogo_lunch_groups"); localStorage.removeItem("megogo_lunch_bookings"); localStorage.removeItem("megogo_lunch_limits"); } catch (e2) {}
+          } finally {
+            syncLoader.classList.add("hidden");
+            syncLoader.classList.remove("flex");
+          }
+        }
+
+        setInterval(silentSyncWithServer, 60000);
+
+        if (currentUserFullName) {
+          completeAuth();
+        }
+
+        function applyFilterVisibility() {
+          const showAll = departmentFilter === "all";
+          gridBodyWrap.querySelectorAll(".group-header-row").forEach(el => {
+            el.style.display = showAll || el.dataset.group === departmentFilter ? "contents" : "none";
+          });
+          gridBodyWrap.querySelectorAll(".employee-row").forEach(el => {
+            el.style.display = showAll || el.dataset.group === departmentFilter ? "contents" : "none";
+          });
+        }
+
+        function buildGrid(json) {
+          try {
+            const timeHeaderWrap = document.getElementById("time-header-wrap");
+            if (!timeHeaderWrap || !gridBodyWrap) return;
+            timeHeaderWrap.innerHTML = "";
+            gridBodyWrap.innerHTML = "";
+
+            const groups = (json && json.groups && json.groups.length > 0) ? json.groups : employeeGroups;
+            const groupsList = Array.isArray(groups) ? groups : [];
+            if (groupsList.length === 0) console.log("buildGrid: json.groups is empty or missing");
+
+            let limitsFallback = [];
+            if (!json || !json.limits || !Array.isArray(json.limits)) {
+              try {
+                const raw = localStorage.getItem("megogo_lunch_limits");
+                if (raw) limitsFallback = JSON.parse(raw) || [];
+              } catch (e) {}
+            }
+            const limitsForGrid = (json && json.limits && Array.isArray(json.limits)) ? json.limits : limitsFallback;
+
+            const leftSpacer = document.createElement("div");
+            leftSpacer.className = "rounded-md";
+            leftSpacer.setAttribute("aria-hidden", "true");
+            timeHeaderWrap.appendChild(leftSpacer);
+            times.forEach((t, tIdx) => {
+              const cell = document.createElement("div");
+              cell.className = "sticky top-0 z-20 flex flex-col items-center justify-center rounded-md bg-white/90 dark:bg-slate-950/95 backdrop-blur-md border border-slate-200 dark:border-slate-600/60 text-[11px] font-semibold text-slate-500 dark:text-slate-300/90";
+              const displayLimit = (json && json.limits && json.limits[tIdx] !== undefined) ? json.limits[tIdx] : (limitsForGrid && limitsForGrid[tIdx] !== undefined) ? limitsForGrid[tIdx] : 0;
+              const numLimit = parseInt(displayLimit, 10);
+              const safeLimit = (isNaN(numLimit) || numLimit > 50) ? 0 : numLimit;
+              if (tIdx % 4 === 0) {
+                const badge = document.createElement("span");
+                badge.className = "text-[9px] text-emerald-400 font-extrabold leading-none mb-1 opacity-80";
+                badge.textContent = "Лім: " + safeLimit;
+                const timeSpan = document.createElement("span");
+                timeSpan.textContent = t;
+                cell.appendChild(badge);
+                cell.appendChild(timeSpan);
+              } else {
+                cell.textContent = t;
+              }
+              timeHeaderWrap.appendChild(cell);
+            });
+            const rightSpacer = document.createElement("div");
+            rightSpacer.className = "rounded-md";
+            rightSpacer.setAttribute("aria-hidden", "true");
+            timeHeaderWrap.appendChild(rightSpacer);
+
+            const opSel = document.getElementById("operator-select");
+            if (opSel) opSel.innerHTML = '<option value="">Оберіть оператора</option>';
+            const timeSel = document.getElementById("time-select");
+            if (timeSel) timeSel.innerHTML = '<option value="">Оберіть час початку</option>';
+            startTimes.forEach((st, i) => { if (timeSel) timeSel.innerHTML += `<option value="${i}">${st.label}</option>`; });
+
+            const savedColor = localStorage.getItem("megogo_lunch_mycolor");
+            if (savedColor && currentUserFullName) {
+              employeeThemes[currentUserFullName] = { main: savedColor, soft: hexToRgba(savedColor, 0.24), glow: hexToRgba(savedColor, 0.86) };
+              const av = document.getElementById("profile-avatar-bg");
+              if (av) av.style.background = savedColor;
+            }
+
+            groupsList.forEach(group => {
+              const employees = (group && Array.isArray(group.employees)) ? group.employees : [];
+              const operatorsInGroup = employees.filter(name => !adminNames.has(String(name)) && !hiddenNames.has(String(name)));
+              if (operatorsInGroup.length === 0) return;
+              const headerWrapper = document.createElement("div");
+              headerWrapper.className = "group-header-row";
+              headerWrapper.dataset.group = (group && group.label) != null ? group.label : "";
+              headerWrapper.style.display = "contents";
+              const sep = document.createElement("div");
+              sep.style.gridColumn = "1 / -1";
+              sep.className = "sticky left-0 z-[50] flex items-center w-full min-w-max bg-slate-100 dark:bg-slate-900 border-y border-slate-200 dark:border-slate-700/50 px-4 py-1.5 mt-1 rounded-md border border-slate-200 dark:border-slate-600/60";              sep.innerHTML = `<span class="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">${(group && group.label) != null ? group.label : ""}</span>`;
+              headerWrapper.appendChild(sep);
+              gridBodyWrap.appendChild(headerWrapper);
+
+              operatorsInGroup.forEach(name => {
+                if (opSel) opSel.innerHTML += `<option value="${name}">${name}</option>`;
+                if (!employeeThemes[name]) employeeThemes[name] = getTheme(name);
+                const theme = employeeThemes[name];
+                const escapedName = String(name).replace(/"/g, "&quot;");
+                const rowWrapper = document.createElement("div");
+                rowWrapper.className = "employee-row";
+                rowWrapper.dataset.group = (group && group.label) != null ? group.label : "";
+                rowWrapper.style.display = "contents";
+                const nameCell = document.createElement("div");
+                nameCell.className = "sticky left-0 z-[20] flex items-center px-3 gap-2 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600/50";
+                nameCell.innerHTML = `<span class="h-2 w-2 rounded-full shrink-0 name-dot" data-dot-employee="${escapedName}" style="background:${theme.main}; box-shadow:0 0 8px ${theme.glow}"></span><span class="text-xs font-bold text-slate-800 dark:text-slate-50 truncate select-none">${name}</span>`;
+                rowWrapper.appendChild(nameCell);
+                const rowLeftSpacer = document.createElement("div");
+                rowLeftSpacer.className = "rounded-md bg-transparent";
+                rowLeftSpacer.setAttribute("aria-hidden", "true");
+                rowWrapper.appendChild(rowLeftSpacer);
+                times.forEach((t, tIdx) => {
+                  const slot = document.createElement("button");
+                  slot.className = "slot-cell";
+                  slot.dataset.employee = name;
+                  slot.dataset.timeindex = tIdx;
+                  slot.dataset.time = t;
+                  slot.style.setProperty("--accent-main", theme.main);
+                  slot.style.setProperty("--accent-soft", theme.soft);
+                  slot.style.setProperty("--accent-glow", theme.glow);
+                  slot.innerHTML = '<span class="slot-tooltip"></span>';
+                  rowWrapper.appendChild(slot);
+                });
+                const rowRightSpacer = document.createElement("div");
+                rowRightSpacer.className = "rounded-md bg-transparent";
+                rowRightSpacer.setAttribute("aria-hidden", "true");
+                rowWrapper.appendChild(rowRightSpacer);
+                gridBodyWrap.appendChild(rowWrapper);
+              });
+            });
+            applyFilterVisibility();
+          } catch (e) {
+            console.error("buildGrid error:", e);
+            localStorage.clear();
+            location.reload();
+          }
+        }
+
+        function sendToGoogleSheet(employeeName, timeStr, actionType) {
+          const url = `${GOOGLE_APP_URL}?type=write_lunch&employee=${encodeURIComponent(employeeName)}&time=${encodeURIComponent(timeStr)}&action=${actionType}&_t=${Date.now()}`;
+          fetch(url).catch(e => console.error("Sync error:", e));
+        }
+
+        function updateSlotTooltip(slot) {
+          const tt = slot.querySelector(".slot-tooltip"); if(!tt) return;
+          if(slot.classList.contains("slot-booked")) {
+            const idx = parseInt(slot.dataset.timeindex, 10);
+            tt.textContent = `${slot.dataset.employee}\n${times[idx]} – ${times[idx+1]||"20:00"}`;
+          } else tt.textContent = "";
+        }
+
+        gridBodyWrap.addEventListener("mouseover", e => {
+          const cell = e.target.closest('.slot-cell.slot-booked');
+          if(cell) { const tt = cell.querySelector('.slot-tooltip'); if(tt) { cell.getBoundingClientRect().top < 120 ? tt.classList.add('tooltip-bottom') : tt.classList.remove('tooltip-bottom'); } }
+        });
+
+        gridBodyWrap.addEventListener("click", e => {
+          const cell = e.target.closest(".slot-cell"); if(!cell) return;
+          if (currentUserRole !== "admin") return;
+          lastActionTime = Date.now();
+          const wasBooked = cell.classList.contains("slot-booked");
+          cell.classList.toggle("slot-booked"); updateSlotTooltip(cell);
+          if (currentView === "list") renderVerticalView();
+          saveBookingsToStorage();
+          const timeStr = times[cell.dataset.timeindex];
+          if(wasBooked) { sendToGoogleSheet(cell.dataset.employee, timeStr, "cancel"); } 
+          else { sendToGoogleSheet(cell.dataset.employee, timeStr, "book"); }
+        });
+
+        // Department filter (instant visibility only, no re-render)
+        // Legacy department filter buttons removed in queue version
+
+        function collectBookingsFromDOM() {
+          const booked = gridBodyWrap.querySelectorAll(".slot-cell.slot-booked");
+          const out = [];
+          booked.forEach(c => {
+            out.push({ employee: c.dataset.employee, timeIndex: parseInt(c.dataset.timeindex, 10) });
+          });
+          return out;
+        }
+
+        function applyBookings(bookings) {
+          const filtered = departmentFilter === "all" ? employeeGroups : employeeGroups.filter(g => g.label === departmentFilter);
+          const filteredEmps = new Set(filtered.flatMap(g => g.employees));
+          bookings.forEach(({ employee, timeIndex }) => {
+            if (!filteredEmps.has(employee)) return;
+            const slot = gridBodyWrap.querySelector(`.slot-cell[data-employee="${employee}"][data-timeindex="${timeIndex}"]`);
+            if (slot && !slot.classList.contains("slot-booked")) {
+              slot.classList.add("slot-booked");
+              updateSlotTooltip(slot);
+            }
+          });
+        }
+
+        function openMyBookingsModal() {
+          if (!currentUserFullName) return;
+          const mySlots = Array.from(gridBodyWrap.querySelectorAll(`.slot-cell.slot-booked[data-employee="${currentUserFullName}"]`))
+            .map(s => ({ slot: s, idx: parseInt(s.dataset.timeindex, 10) }))
+            .sort((a, b) => a.idx - b.idx);
+          const list = document.getElementById("my-bookings-list");
+          const empty = document.getElementById("my-bookings-empty");
+          const overlay = document.getElementById("my-bookings-modal-overlay");
+          list.innerHTML = "";
+          if (mySlots.length === 0) {
+            empty.classList.remove("hidden");
+            list.classList.add("hidden");
+          } else {
+            empty.classList.add("hidden");
+            list.classList.remove("hidden");
+            mySlots.forEach(({ slot, idx }) => {
+              const endStr = times[idx + 1] || "19:45";
+              const div = document.createElement("div");
+              div.className = "flex justify-between items-center p-3 rounded-lg bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700";
+              div.innerHTML = `<span class="text-sm font-bold text-slate-800 dark:text-slate-100">${times[idx]} – ${endStr}</span><button class="cancel-slot-btn px-3 py-1.5 rounded-lg text-xs font-bold uppercase bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white transition-colors" data-idx="${idx}">Скасувати</button>`;
+              div.querySelector(".cancel-slot-btn").addEventListener("click", () => {
+                lastActionTime = Date.now();
+                slot.classList.remove("slot-booked");
+                updateSlotTooltip(slot);
+                sendToGoogleSheet(currentUserFullName, times[idx], "cancel");
+                saveBookingsToStorage();
+                div.remove();
+                if (list.children.length === 0) { empty.classList.remove("hidden"); list.classList.add("hidden"); }
+                if (currentView === "list") renderVerticalView();
+                showToast("Бронювання скасовано", "success");
+              });
+              list.appendChild(div);
+            });
+          }
+          overlay.classList.remove("pointer-events-none", "opacity-0");
+          overlay.classList.add("opacity-100");
+        }
+
+        const myBookingsOverlay = document.getElementById("my-bookings-modal-overlay");
+        document.getElementById("close-my-bookings").addEventListener("click", () => {
+          myBookingsOverlay.classList.add("pointer-events-none", "opacity-0");
+          myBookingsOverlay.classList.remove("opacity-100");
+        });
+        myBookingsOverlay.addEventListener("click", (e) => { if (e.target === myBookingsOverlay) { myBookingsOverlay.classList.add("pointer-events-none", "opacity-0"); myBookingsOverlay.classList.remove("opacity-100"); } });
+
+        // Legacy "my lunch" widget and timer removed in queue version
+
+        const profileBtn = document.getElementById("profile-btn"), profileDropdown = document.getElementById("profile-dropdown"); let dropOpen = false;
+        profileBtn.addEventListener("click", (e) => { e.stopPropagation(); dropOpen = !dropOpen; dropOpen ? profileDropdown.classList.remove("opacity-0","pointer-events-none","-translate-y-2") : profileDropdown.classList.add("opacity-0","pointer-events-none","-translate-y-2"); });
+        document.addEventListener("click", (e) => { if(dropOpen && !profileDropdown.contains(e.target) && !profileBtn.contains(e.target)) { dropOpen = false; profileDropdown.classList.add("opacity-0","pointer-events-none","-translate-y-2"); } });
+        document.getElementById("theme-toggle-switch").addEventListener("change", (e) => { const isDark = e.target.checked; document.documentElement.classList.toggle("dark", isDark); document.getElementById("theme-icon-label").textContent = isDark ? "🌙" : "☀️"; });
+
+        const bOverlay = document.getElementById("booking-modal-overlay");
+        const closeBModal = () => { bOverlay.classList.add("pointer-events-none", "opacity-0"); bOverlay.classList.remove("opacity-100"); };
+        document.getElementById("booking-cancel").addEventListener("click", closeBModal);
+        document.getElementById("booking-save").addEventListener("click", () => {
+          const emp = document.getElementById("operator-select").value;
+          const tIdx = document.getElementById("time-select").value;
+          const dur = parseInt(document.getElementById("duration-select").value, 10);
+          if (!emp || tIdx === "") return showToast("Оберіть оператора та час", "error");
+          lastActionTime = Date.now();
+          const st = startTimes[parseInt(tIdx, 10)];
+          const slotsCount = dur / 15;
+          const sIdx = st.sIdx;
+          const eIdx = sIdx + slotsCount - 1;
+          if (eIdx >= times.length) return showToast("Час виходить за межі розкладу", "error");
+          let conflict = false;
+          for (let i = sIdx; i <= eIdx; i++) {
+            if (gridBodyWrap.querySelector(`.slot-cell.slot-booked[data-employee="${emp}"][data-timeindex="${i}"]`)) conflict = true;
+          }
+          if (conflict) return showToast("Ви вже маєте обід в цей час!", "error");
+          for (let i = sIdx; i <= eIdx; i++) {
+            const slot = gridBodyWrap.querySelector(`.slot-cell[data-employee="${emp}"][data-timeindex="${i}"]`);
+            if (slot) { slot.classList.add("slot-booked"); updateSlotTooltip(slot); sendToGoogleSheet(emp, times[i], "book"); }
+          }
+          saveBookingsToStorage();
+          if (currentView === "list") renderVerticalView();
+          showToast("Обід додано!", "success");
+          closeBModal();
+        });
+
+        const rOverlay = document.getElementById("rules-modal-overlay");
+        document.getElementById("open-rules").addEventListener("click", () => { rOverlay.classList.remove("pointer-events-none", "opacity-0"); rOverlay.classList.add("opacity-100"); });
+        document.getElementById("close-rules").addEventListener("click", () => { rOverlay.classList.add("pointer-events-none", "opacity-0"); rOverlay.classList.remove("opacity-100"); });
+
+        function collectBookingGroups() {
+          const filtered = departmentFilter === "all" ? employeeGroups : employeeGroups.filter(g => g.label === departmentFilter);
+          const allowedEmps = new Set(filtered.flatMap(g => g.employees));
+          const booked = gridBodyWrap.querySelectorAll(".slot-cell.slot-booked");
+          const map = new Map();
+          booked.forEach(cell => {
+            const emp = cell.dataset.employee;
+            if (!allowedEmps.has(emp)) return;
+            const idx = parseInt(cell.dataset.timeindex, 10);
+            if(!map.has(emp)) map.set(emp, []); map.get(emp).push(idx);
+          });
+          const res = [];
+          map.forEach((indexes, employee) => {
+            indexes.sort((a,b)=>a-b); let start = indexes[0], prev = start;
+            for(let i=1; i<indexes.length; i++) {
+              if(indexes[i] === prev+1) prev = indexes[i];
+              else { res.push({ employee, startIndex: start, endIndex: prev }); start = indexes[i]; prev = indexes[i]; }
+            }
+            res.push({ employee, startIndex: start, endIndex: prev });
+          });
+          return res;
+        }
+
+        document.getElementById("btn-open-admin")?.addEventListener("click", () => {
+          if (currentUserRole === "admin") {
+            openAdmin();
+          }
+        });
+
+        const aOverlay = document.getElementById("admin-overlay");
+        document.getElementById("close-admin").addEventListener("click", () => { aOverlay.classList.add("pointer-events-none", "opacity-0"); aOverlay.classList.remove("opacity-100"); });
+        
+        const tabUsersBtn = document.getElementById('tab-btn-users'), tabRolesBtn = document.getElementById('tab-btn-roles'), tabLimitsBtn = document.getElementById('tab-btn-limits');
+        const tabUsers = document.getElementById('admin-users-tab'), tabRoles = document.getElementById('admin-roles-tab'), tabLimits = document.getElementById('admin-limits-tab');
+
+        function switchAdminTab(activeBtn, activeTab) {
+            [tabUsersBtn, tabRolesBtn, tabLimitsBtn].forEach(b => { b.classList.replace('text-rose-500', 'text-slate-400'); b.classList.replace('border-rose-500', 'border-transparent'); });
+            [tabUsers, tabRoles, tabLimits].forEach(t => t.classList.add('hidden'));
+            activeBtn.classList.replace('text-slate-400', 'text-rose-500'); activeBtn.classList.replace('border-transparent', 'border-rose-500');
+            activeTab.classList.remove('hidden');
+        }
+        tabUsersBtn.addEventListener('click', () => { switchAdminTab(tabUsersBtn, tabUsers); loadAdminUsers(); });
+        tabRolesBtn.addEventListener('click', () => { switchAdminTab(tabRolesBtn, tabRoles); loadAdminRoles(); });
+        tabLimitsBtn.addEventListener('click', () => { switchAdminTab(tabLimitsBtn, tabLimits); loadAdminLimits(); });
+
+        async function loadAdminUsers() {
+          const list = document.getElementById("admin-users-list");
+          if (!list) return;
+          const fetchUrl = `${GOOGLE_APP_URL}?type=get_admin_users&_t=${Date.now()}`;
+          list.innerHTML = "<p class='text-slate-500'>Завантаження користувачів...</p>";
+          try {
+            const res = await fetch(fetchUrl);
+            const text = await res.text();
+            let json = {};
+            try { json = text ? JSON.parse(text) : {}; } catch (e) { json = {}; }
+            const ok = json.status === "success" || json.status === "ok";
+            const users = Array.isArray(json.users) ? json.users : [];
+            if (!ok || users.length === 0) {
+              list.innerHTML = (json.msg || json.message) ? `<p class='text-slate-500'>${String(json.msg || json.message)}</p>` : "<p class='text-slate-500'>Користувачів немає</p>";
+              return;
+            }
+            list.innerHTML = users.map(u => {
+              const viciId = String(u.viciId ?? u.viciID ?? u.id ?? "");
+              const name = String(u.name ?? u.firstName ?? "");
+              const surname = String(u.surname ?? u.lastName ?? "");
+              const role = String(u.role || "operator");
+              const password = String(u.password ?? u.pass ?? "");
+              const shiftHours = Number(u.shiftHours ?? u.hours ?? 0) || 0;
+              const safeVici = viciId.replace(/"/g, "&quot;");
+              return `
+                <div class="admin-user-card bg-slate-800 border border-slate-700 p-3 rounded-xl flex flex-col gap-2 relative group" data-vici-id="${safeVici}">
+                  <div class="flex items-start justify-between gap-2">
+                    <div class="min-w-0">
+                      <p class="text-white font-bold text-sm truncate">${surname} ${name}</p>
+                      <p class="text-[11px] text-slate-400 mt-0.5">ViciDial ID: <span class="text-sky-400 font-mono font-bold">${viciId || "—"}</span></p>
+                    </div>
+                    <button type="button" class="admin-user-delete-btn shrink-0 w-8 h-8 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition-colors flex items-center justify-center" title="Видалити акаунт">
+                      <i class="fa-solid fa-trash"></i>
+                    </button>
+                  </div>
+                  <div class="grid grid-cols-2 gap-2 text-[11px]">
+                    <div class="rounded-lg bg-slate-900/60 border border-slate-700 px-2.5 py-2">
+                      <p class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Роль</p>
+                      <p class="text-slate-200 font-bold mt-0.5">${role}</p>
+                    </div>
+                    <div class="rounded-lg bg-slate-900/60 border border-slate-700 px-2.5 py-2">
+                      <p class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Смена</p>
+                      <p class="text-slate-200 font-bold mt-0.5">Смена: ${shiftHours ? shiftHours : "—"} год</p>
+                    </div>
+                  </div>
+                  <div class="rounded-lg bg-slate-900/60 border border-slate-700 px-2.5 py-2 text-[11px] flex items-center justify-between gap-2">
+                    <span class="text-slate-400 font-semibold uppercase tracking-wider text-[10px]">Пароль</span>
+                    <span class="text-rose-300 font-mono font-bold tracking-wider">${password || "—"}</span>
+                  </div>
+                </div>
+              `;
+            }).join("");
+
+            list.querySelectorAll(".admin-user-delete-btn").forEach(btn => {
+              const card = btn.closest(".admin-user-card");
+              btn.addEventListener("click", async () => {
+                const viciId = (card?.getAttribute("data-vici-id") || "").replace(/&quot;/g, '"');
+                if (!viciId) return showToast("Не знайдено ViciDial ID", "error");
+                if (!confirm("Видалити акаунт?")) return;
+                try {
+                  const r = await fetch(`${GOOGLE_APP_URL}?type=delete_user&viciId=${encodeURIComponent(viciId)}&_t=${Date.now()}`);
+                  const j = await r.json().catch(() => ({}));
+                  if (j.status !== "success" && j.status !== "ok") {
+                    showToast(j.msg || j.message || "Помилка видалення", "error");
+                    return;
+                  }
+                  card?.remove();
+                  showToast("Акаунт видалено", "success");
+                } catch (e) {
+                  showToast("Помилка видалення", "error");
+                }
+              });
+            });
+          } catch (e) {
+            const errMsg = e && e.message ? String(e.message) : String(e);
+            list.innerHTML = `<p class='text-rose-500'>Помилка завантаження: ${errMsg}</p>`;
+          }
+        }
+
+        async function loadAdminRoles() {
+          const list = document.getElementById("admin-roles-list");
+          if (!list) return;
+          list.innerHTML = "<p class='text-slate-500'>Завантаження прав доступу...</p>";
+          try {
+            const res = await fetch(`${GOOGLE_APP_URL}?type=get_admin_users&_t=${Date.now()}`);
+            const json = await res.json().catch(() => ({}));
+            const users = Array.isArray(json.users) ? json.users : [];
+            if ((json.status !== "success" && json.status !== "ok") || users.length === 0) {
+              list.innerHTML = "<p class='text-slate-500'>Користувачів немає</p>";
+              return;
+            }
+            list.innerHTML = users.map(u => {
+              const viciId = String(u.viciId ?? u.viciID ?? u.id ?? "");
+              const name = String(u.name ?? u.firstName ?? "");
+              const surname = String(u.surname ?? u.lastName ?? "");
+              const role = String(u.role || "operator");
+              const safeVici = viciId.replace(/"/g, "&quot;");
+              return `
+                <div class="bg-slate-800 border border-slate-700 p-3 rounded-xl flex items-center justify-between gap-3 role-card" data-vici-id="${safeVici}">
+                  <div class="min-w-0">
+                    <p class="text-white font-bold text-sm truncate">${surname} ${name}</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5">ViciDial ID: <span class="text-sky-400 font-mono font-bold">${viciId || "—"}</span></p>
+                  </div>
+                  <select class="admin-role-select modal-select rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-xs text-white font-bold" data-vici-id="${safeVici}">
+                    <option value="operator" ${role === "operator" ? "selected" : ""}>operator</option>
+                    <option value="admin" ${role === "admin" ? "selected" : ""}>admin</option>
+                  </select>
+                </div>
+              `;
+            }).join("");
+
+            list.querySelectorAll(".admin-role-select").forEach(sel => {
+              sel.addEventListener("change", async () => {
+                const viciId = (sel.getAttribute("data-vici-id") || "").replace(/&quot;/g, '"');
+                const newRole = sel.value;
+                try {
+                  await fetch(`${GOOGLE_APP_URL}?type=update_role&viciId=${encodeURIComponent(viciId)}&role=${encodeURIComponent(newRole)}&_t=${Date.now()}`);
+                  showToast("Роль оновлено", "success");
+                } catch (e) {
+                  showToast("Помилка оновлення ролі", "error");
+                }
+              });
+            });
+          } catch (e) {
+            list.innerHTML = "<p class='text-rose-500'>Помилка завантаження</p>";
+          }
+        }
+
+        async function loadAdminLimits() {
+          const list = document.getElementById("admin-limits-list");
+          if (!list) return;
+          list.innerHTML = "<p class='text-slate-500'>Завантаження лімітів...</p>";
+          try {
+            const res = await fetch(`${GOOGLE_APP_URL}?type=get_admin_users&_t=${Date.now()}`, { redirect: "follow" });
+            const json = await res.json().catch(() => ({}));
+            const lim = json.limits || {};
+            const maxLunch = Number(lim.maxLunch ?? 2);
+            const maxBreak = Number(lim.maxBreak ?? 1);
+
+            list.innerHTML = `
+              <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl flex flex-col gap-3">
+                <div>
+                  <p class="text-white font-bold text-lg">Активні ліміти черги</p>
+                  <p class="text-[11px] text-slate-400 mt-1">Маска (Ланч + Брейк). Скільки людей можуть одночасно знаходитись на перерві.</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-300">Кількість Ланчів (&gt;15 хв)</label>
+                    <input id="admin-limit-lunch" type="number" min="0" max="10" class="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-rose-500/60" value="${Number.isFinite(maxLunch) ? maxLunch : 2}" />
+                  </div>
+                  <div class="space-y-1.5">
+                    <label class="text-xs font-semibold text-slate-300">Кількість Брейків (&lt;=15 хв)</label>
+                    <input id="admin-limit-break" type="number" min="0" max="10" class="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-rose-500/60" value="${Number.isFinite(maxBreak) ? maxBreak : 1}" />
+                  </div>
+                </div>
+                <button id="admin-save-limits" type="button" class="mt-2 w-full px-4 py-2.5 rounded-xl text-xs font-bold uppercase bg-rose-600 hover:bg-rose-500 text-white transition-colors">
+                  Оновити ліміти
+                </button>
+              </div>
+            `;
+
+            const saveBtn = document.getElementById("admin-save-limits");
+            saveBtn?.addEventListener("click", async () => {
+              const lunchVal = Math.max(0, Math.min(10, parseInt(document.getElementById("admin-limit-lunch")?.value || "0", 10)));
+              const breakVal = Math.max(0, Math.min(10, parseInt(document.getElementById("admin-limit-break")?.value || "0", 10)));
+              const original = saveBtn.textContent;
+              saveBtn.textContent = "Збереження...";
+              saveBtn.disabled = true;
+              try {
+                const r = await fetch(`${GOOGLE_APP_URL}?type=update_global_limits&maxLunch=${encodeURIComponent(lunchVal)}&maxBreak=${encodeURIComponent(breakVal)}&_t=${Date.now()}`);
+                const j = await r.json().catch(() => ({}));
+                if (j.status !== "success" && j.status !== "ok" && !r.ok) {
+                  showToast(j.msg || j.message || "Помилка оновлення лімітів", "error");
+                  return;
+                }
+                showToast("Ліміти оновлено", "success");
+                await fetchQueueState(true);
+              } catch (e) {
+                showToast("Помилка оновлення лімітів", "error");
+              } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = original;
+              }
+            });
+          } catch (e) {
+            list.innerHTML = `<p class='text-rose-500'>Помилка завантаження: ${String(e.message || e)}</p>`;
+          }
+        }
+
+        // Legacy per-hour limit editor removed (queue now uses globalLimits)
+
+        function openAdmin() {
+          switchAdminTab(tabUsersBtn, tabUsers);
+          loadAdminUsers();
+          aOverlay.classList.remove("pointer-events-none", "opacity-0");
+          aOverlay.classList.add("opacity-100");
+        }
+
+        function showToast(msg, type) {
+          const tc = document.getElementById("toast-container"); const t = document.createElement("div");
+          t.className = `rounded-xl px-4 py-2.5 text-sm font-bold shadow-2xl border flex items-center transition-all duration-200 translate-y-2 opacity-0 ${type==="success"?"bg-emerald-500/10 border-emerald-400/60 text-emerald-500":"bg-rose-500/10 border-rose-400/60 text-rose-500"} backdrop-blur-md bg-white/90 dark:bg-slate-900/90`;
+          t.innerHTML = msg; tc.appendChild(t); requestAnimationFrame(()=>{ t.style.opacity=1; t.style.transform="translateY(0)"; });
+          setTimeout(()=>{ t.style.opacity=0; t.style.transform="translateY(-4px)"; setTimeout(()=>t.remove(),200); }, 3000);
+        }
+
+        function setView(mode) {
+          // Legacy grid/list view switching no longer used in queue version
+          currentView = mode;
+        }
+
+        const gridScrollContainer = document.getElementById("grid-scroll-container");
+
+        const jumpToNowBtn = document.getElementById("jump-to-now");
+        if (jumpToNowBtn && gridScrollContainer) {
+          jumpToNowBtn.addEventListener("click", () => {
+            const now = new Date();
+            const minNow = now.getHours() * 60 + now.getMinutes();
+            if (minNow < startM || minNow > endM) return;
+            const idx = (minNow - startM) / 15;
+            const cellW = 44.8, gap = 3, sidebar = 240, arrowCol = 35.2, pad = 8;
+            const targetLeft = pad + sidebar + arrowCol + gap + idx * (cellW + gap) + cellW / 2;
+            const scrollLeft = Math.max(0, targetLeft - gridScrollContainer.clientWidth / 2);
+            gridScrollContainer.scrollTo({ left: scrollLeft, behavior: "smooth" });
+          });
+        }
+
+        function renderVerticalView() {
+           // Legacy vertical view is no longer used in the queue-based interface.
+        }
+
+        // =========================
+        // Queue-based break system
+        // =========================
+
+        const soundStarted = document.getElementById("sound-started");
+        const soundUsed = document.getElementById("sound-used");
+        const soundDeleted = document.getElementById("sound-deleted");
+        const soundSkipped = document.getElementById("sound-skipped");
+        const soundError = document.getElementById("sound-error");
+
+        let queueState = {
+          items: [],
+          serverTime: null,
+          user: {
+            shiftMinutes: 0,
+            allowedMinutes: 0,
+            usedMinutes: 0,
+            remainingMinutes: 0
+          },
+          globalLimits: { maxLunch: 2, maxBreak: 1 }
+        };
+
+        let lastQueueFetch = 0;
+        let queuePollingStarted = false;
+
+        const queueStatusEls = {
+          shiftDuration: document.getElementById("shift-duration"),
+          allowedTime: document.getElementById("allowed-time"),
+          usedTime: document.getElementById("used-time"),
+          remainingTime: document.getElementById("remaining-time"),
+          activeList: document.getElementById("active-queue-list"),
+          waitingList: document.getElementById("waiting-queue-list"),
+          refreshBtn: document.getElementById("queue-refresh-btn"),
+          joinForm: document.getElementById("join-queue-form"),
+          requestMinutesInput: document.getElementById("request-minutes"),
+          queueTypeSelect: document.getElementById("queue-type"),
+          joinBtn: document.getElementById("join-queue-btn")
+        };
+
+        function minutesToHHMM(mins) {
+          if (!mins || mins <= 0) return "00:00";
+          const h = Math.floor(mins / 60);
+          const m = mins % 60;
+          return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+        }
+
+        function formatDurationFromSeconds(totalSeconds) {
+          const s = Math.max(0, Math.floor(totalSeconds));
+          const m = Math.floor(s / 60);
+          const sec = s % 60;
+          return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+        }
+
+        function playSafe(soundEl) {
+          if (!soundEl) return;
+          try { soundEl.currentTime = 0; soundEl.play().catch(() => {}); } catch (_) {}
+        }
+
+        function isOwnQueueItem(item) {
+          const currentEmail = localStorage.getItem("megogo_queue_viciId") || localStorage.getItem("megogo_lunch_email") || "";
+          if (!item) return false;
+          if (item.userEmail && currentEmail && String(item.userEmail).toLowerCase() === currentEmail.toLowerCase()) return true;
+          if (item.userName && currentUserFullName && String(item.userName).toLowerCase() === currentUserFullName.toLowerCase()) return true;
+          return false;
+        }
+
+        function computeActiveLimits() {
+          const active = queueState.items.filter(i => i.status === "active" && i.queueId === 1);
+          const activeLunch = active.filter(i => Number(i.breakTime) > 15);
+          const activeShort = active.filter(i => Number(i.breakTime) <= 15);
+          const maxLunch = queueState.globalLimits?.maxLunch || 2;
+          const maxBreak = queueState.globalLimits?.maxBreak || 1;
+          return {
+            activeLunchCount: activeLunch.length,
+            activeShortCount: activeShort.length,
+            canStartLunch: activeLunch.length < maxLunch,
+            canStartShort: activeShort.length < maxBreak,
+            maxLunch: maxLunch,
+            maxBreak: maxBreak
+          };
+        }
+
+        function updateStatusDashboard() {
+          const u = queueState.user;
+          if (queueStatusEls.shiftDuration) queueStatusEls.shiftDuration.textContent = u.shiftMinutes > 0 ? minutesToHHMM(u.shiftMinutes) : "--:--";
+          if (queueStatusEls.allowedTime) queueStatusEls.allowedTime.textContent = `${Math.round(u.allowedMinutes || 0)} хв`;
+          if (queueStatusEls.usedTime) queueStatusEls.usedTime.textContent = `${Math.round(u.usedMinutes || 0)} хв`;
+          if (queueStatusEls.remainingTime) {
+            const rem = Math.max(0, Math.round(u.remainingMinutes || 0));
+            queueStatusEls.remainingTime.textContent = `${rem} хв`;
+            queueStatusEls.remainingTime.classList.toggle("text-rose-500", rem <= 0);
+            queueStatusEls.remainingTime.classList.toggle("dark:text-rose-400", rem <= 0);
+          }
+        }
+
+        function renderQueues() {
+          updateStatusDashboard();
+          const { activeList, waitingList } = queueStatusEls;
+          if (!activeList || !waitingList) return;
+
+          const items = Array.isArray(queueState.items) ? [...queueState.items] : [];
+          const waiting = items.filter(i => i.status === "waiting").sort((a, b) => new Date(a.enteredQueueTime) - new Date(b.enteredQueueTime));
+          const active = items.filter(i => i.status === "active");
+          const paused = items.filter(i => i.status === "paused");
+
+          const limits = computeActiveLimits();
+          const activeHint = document.getElementById("active-limits-hint");
+          if (activeHint) {
+            activeHint.textContent = `До ${limits.maxLunch} на обіді, ${limits.maxBreak} на короткій перерві. WC без обмежень.`;
+          }
+          const nowTs = Date.now();
+
+          const allActive = [...active, ...paused].sort((a, b) => new Date(a.progressStartedTime || a.enteredQueueTime) - new Date(b.progressStartedTime || b.enteredQueueTime));
+
+          if (allActive.length === 0) {
+            activeList.innerHTML = `<div class="flex items-center justify-center h-full text-xs text-slate-500 dark:text-slate-400 font-medium px-4 py-6">Ніхто зараз не на перерві</div>`;
+          } else {
+            activeList.innerHTML = allActive.map(item => {
+              const isOwn = isOwnQueueItem(item);
+              const isAdmin = currentUserRole === "admin";
+              const canManage = isOwn || isAdmin;
+              const isPaused = item.status === "paused";
+
+              const baseUsedSeconds = Number(item.usedSeconds || item.usedTime || 0);
+              let displaySeconds = baseUsedSeconds;
+              if (item.status === "active" && item.progressStartedTime) {
+                const startedTs = new Date(item.progressStartedTime).getTime();
+                if (!Number.isNaN(startedTs)) {
+                  displaySeconds = baseUsedSeconds + Math.max(0, Math.floor((nowTs - startedTs) / 1000));
+                }
+              }
+
+              const durationLabel = `${item.breakTime || 0} хв`;
+              const timerLabel = formatDurationFromSeconds(displaySeconds);
+
+              const queueLabel = Number(item.breakTime) <= 15 ? "Коротка" : "Обід";
+              const badgeColor = Number(item.breakTime) <= 15 ? "bg-sky-500/10 text-sky-400 border-sky-400/50" : "bg-emerald-500/10 text-emerald-400 border-emerald-400/50";
+
+              const statusLabel = isPaused ? "Пауза" : "Активно";
+              const statusDot = isPaused ? "bg-amber-400" : "bg-emerald-400";
+
+              const canFinish = canManage;
+
+              return `
+                <div class="border-b last:border-b-0 border-slate-200/80 dark:border-slate-700/70 px-3.5 py-2.5 flex items-center gap-3 queue-row" data-queue-id="${String(item.id)}">
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between gap-2">
+                      <div class="min-w-0">
+                        <p class="text-xs font-bold text-slate-900 dark:text-slate-50 truncate">${item.userName || "Оператор"}</p>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                          <span class="inline-flex items-center gap-1">
+                            <span class="h-1.5 w-1.5 rounded-full ${statusDot}"></span>
+                            ${statusLabel}
+                          </span>
+                          <span class="mx-1">•</span>
+                          ${queueLabel}
+                        </p>
+                      </div>
+                      <div class="flex flex-col items-end gap-0.5">
+                        <span class="text-xs font-mono font-bold text-emerald-500 dark:text-emerald-400">${timerLabel}</span>
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-semibold ${badgeColor}">
+                          ${durationLabel}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    ${canManage ? `
+                      ${isPaused
+                        ? `<button class="queue-action-btn resume-btn w-7 h-7 rounded-full flex items-center justify-center bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-colors text-[11px]" title="Продовжити">
+                              <i class="fa-solid fa-play"></i>
+                           </button>`
+                        : `<button class="queue-action-btn pause-btn w-7 h-7 rounded-full flex items-center justify-center bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-white transition-colors text-[11px]" title="Пауза">
+                              <i class="fa-solid fa-pause"></i>
+                           </button>`
+                      }
+                      ${canFinish ? `
+                        <button class="queue-action-btn finish-btn w-7 h-7 rounded-full flex items-center justify-center bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-colors text-[11px]" title="Завершити">
+                          <i class="fa-solid fa-check"></i>
+                        </button>` : ""}
+                    ` : ""}
+                  </div>
+                </div>
+              `;
+            }).join("");
+          }
+
+          if (waiting.length === 0) {
+            waitingList.innerHTML = `<div class="flex items-center justify-center h-full text-xs text-slate-500 dark:text-slate-400 font-medium px-4 py-6">Черга очікування порожня</div>`;
+          } else {
+            const currentEmail = localStorage.getItem("megogo_queue_viciId") || localStorage.getItem("megogo_lunch_email") || "";
+            let availableLunches = Math.max(0, limits.maxLunch - limits.activeLunchCount);
+            let availableShorts = Math.max(0, limits.maxBreak - limits.activeShortCount);
+            waitingList.innerHTML = waiting.map((item, idx) => {
+              const isOwn = isOwnQueueItem(item);
+              const isAdmin = currentUserRole === "admin";
+              const canManage = isOwn || isAdmin;
+
+              const queueLabel = Number(item.breakTime) <= 15 ? "Коротка" : "Обід";
+              const badgeColor = Number(item.breakTime) <= 15 ? "bg-sky-500/10 text-sky-400 border-sky-400/50" : "bg-emerald-500/10 text-emerald-400 border-emerald-400/50";
+
+              const isShort = Number(item.breakTime) <= 15;
+              let canStartForThis = false;
+              let disableStartReason = "";
+
+              if (isShort) {
+                if (availableShorts > 0) {
+                  canStartForThis = canManage;
+                  availableShorts--;
+                } else {
+                  canStartForThis = false;
+                  disableStartReason = "Черга ще не дійшла або ліміт вичерпано";
+                }
+              } else {
+                if (availableLunches > 0) {
+                  canStartForThis = canManage;
+                  availableLunches--;
+                } else {
+                  canStartForThis = false;
+                  disableStartReason = "Черга ще не дійшла або ліміт вичерпано";
+                }
+              }
+
+              if (!canManage) canStartForThis = false;
+
+              const position = idx + 1;
+              const entered = item.enteredQueueTime ? new Date(item.enteredQueueTime) : null;
+              const enteredStr = entered && !Number.isNaN(entered.getTime())
+                ? entered.toLocaleTimeString("uk-UA", { hour: "2-digit", minute: "2-digit" })
+                : "--:--";
+
+              return `
+                <div class="border-b last:border-b-0 border-slate-200/80 dark:border-slate-700/70 px-3.5 py-2.5 flex items-center gap-3 queue-row" data-queue-id="${String(item.id)}">
+                  <div class="flex flex-col items-center justify-center text-[10px] font-semibold text-slate-500 dark:text-slate-400 w-7 shrink-0">
+                    <span class="h-6 w-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[11px] font-bold text-slate-700 dark:text-slate-100">${position}</span>
+                    <span class="mt-0.5">${enteredStr}</span>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between gap-2">
+                      <div class="min-w-0">
+                        <p class="text-xs font-bold text-slate-900 dark:text-slate-50 truncate">${item.userName || "Оператор"}</p>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                          <span>${queueLabel}</span>
+                          <span class="mx-1">•</span>
+                          <span>${item.breakTime || 0} хв</span>
+                        </p>
+                      </div>
+                      <div class="flex flex-col items-end gap-0.5">
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[10px] font-semibold ${badgeColor}">
+                          Черга
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    ${canManage ? `
+                      <button class="queue-action-btn start-btn w-7 h-7 rounded-full flex items-center justify-center ${canStartForThis ? "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white" : "bg-slate-700/20 text-slate-400 cursor-not-allowed"} transition-colors text-[11px]" title="${canStartForThis ? "Почати перерву" : (disableStartReason || "Ліміт активних перерв досягнуто")}">
+                        <i class="fa-solid fa-play"></i>
+                      </button>
+                      <button class="queue-action-btn delete-btn w-7 h-7 rounded-full flex items-center justify-center bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-colors text-[11px]" title="Видалити з черги">
+                        <i class="fa-solid fa-ban"></i>
+                      </button>
+                      <button class="queue-action-btn skip-btn w-7 h-7 rounded-full flex items-center justify-center bg-slate-500/10 text-slate-500 hover:bg-slate-500 hover:text-white transition-colors text-[11px]" title="Пересунути вниз">
+                        <i class="fa-solid fa-forward"></i>
+                      </button>
+                    ` : ""}
+                  </div>
+                </div>
+              `;
+            }).join("");
+          }
+
+          // Attach handlers for action buttons
+          activeList.querySelectorAll(".queue-row").forEach(row => {
+            const id = row.getAttribute("data-queue-id");
+            const pauseBtn = row.querySelector(".pause-btn");
+            const resumeBtn = row.querySelector(".resume-btn");
+            const finishBtn = row.querySelector(".finish-btn");
+            if (pauseBtn) pauseBtn.addEventListener("click", () => queueAction("pause", id));
+            if (resumeBtn) resumeBtn.addEventListener("click", () => queueAction("resume", id));
+            if (finishBtn) finishBtn.addEventListener("click", () => queueAction("finish", id));
+          });
+
+          waitingList.querySelectorAll(".queue-row").forEach(row => {
+            const id = row.getAttribute("data-queue-id");
+            const startBtn = row.querySelector(".start-btn");
+            const deleteBtn = row.querySelector(".delete-btn");
+            const skipBtn = row.querySelector(".skip-btn");
+            if (startBtn && !startBtn.classList.contains("cursor-not-allowed")) {
+              startBtn.addEventListener("click", () => queueAction("start", id));
+            }
+            if (deleteBtn) deleteBtn.addEventListener("click", () => queueAction("delete", id));
+            if (skipBtn) skipBtn.addEventListener("click", () => queueAction("skip", id));
+          });
+        }
+
+        function updateLiveTimers() {
+          const { activeList } = queueStatusEls;
+          if (!activeList) return;
+          const nowTs = Date.now();
+          queueState.items.forEach(item => {
+            if (!item || (item.status !== "active" && item.status !== "paused")) return;
+            const row = activeList.querySelector(`.queue-row[data-queue-id="${String(item.id)}"]`);
+            if (!row) return;
+            const timerEl = row.querySelector(".font-mono");
+            if (!timerEl) return;
+            const baseUsedSeconds = Number(item.usedSeconds || item.usedTime || 0);
+            let displaySeconds = baseUsedSeconds;
+            if (item.status === "active" && item.progressStartedTime) {
+              const startedTs = new Date(item.progressStartedTime).getTime();
+              if (!Number.isNaN(startedTs)) {
+                displaySeconds = baseUsedSeconds + Math.max(0, Math.floor((nowTs - startedTs) / 1000));
+              }
+            }
+            timerEl.textContent = formatDurationFromSeconds(displaySeconds);
+          });
+        }
+
+        async function fetchQueueState(showLoader = false) {
+          const now = Date.now();
+          lastQueueFetch = now;
+          try {
+            if (showLoader && syncLoader) {
+              syncLoaderText.textContent = "Оновлення черги...";
+              syncLoader.classList.remove("hidden");
+            }
+            const viciId = localStorage.getItem("megogo_queue_viciId") || localStorage.getItem("megogo_lunch_email") || "";
+            const url = `${GOOGLE_APP_URL}?type=get_queue_state&viciId=${encodeURIComponent(viciId)}&_t=${now}`;
+            const res = await fetch(url, { method: "GET", redirect: "follow" });
+            const text = await res.text();
+            let json = {};
+            try {
+              json = text ? JSON.parse(text) : {};
+            } catch (e) {
+              console.error("get_queue_state: invalid JSON", e, text);
+              showToast("Помилка формату відповіді сервера", "error");
+              playSafe(soundError);
+              return;
+            }
+            if (json.status !== "success" && json.status !== "ok") {
+              showToast(json.msg || json.message || "Не вдалося оновити чергу", "error");
+              playSafe(soundError);
+              return;
+            }
+
+            const user = json.user || {};
+            const shiftMinutes = Number(user.shiftMinutes || user.shiftDurationMinutes || 0);
+            const usedMinutes = Number(user.usedMinutes || 0);
+            const allowedMinutes = shiftMinutes > 0
+              ? (user.allowedMinutes != null ? Number(user.allowedMinutes) : (shiftMinutes * 0.125))
+              : Number(user.allowedMinutes || 0);
+            const remainingMinutes = user.remainingMinutes != null
+              ? Number(user.remainingMinutes)
+              : Math.max(0, allowedMinutes - usedMinutes);
+
+            queueState = {
+              items: Array.isArray(json.items) ? json.items : [],
+              serverTime: json.serverTime || null,
+              user: { shiftMinutes, allowedMinutes, usedMinutes, remainingMinutes },
+              globalLimits: queueState.globalLimits || { maxLunch: 2, maxBreak: 1 }
+            };
+            queueState.globalLimits = json.globalLimits || { maxLunch: 2, maxBreak: 1 };
+            renderQueues();
+          } catch (e) {
+            console.error("fetchQueueState error:", e);
+            showToast("Помилка з'єднання з сервером черги", "error");
+            playSafe(soundError);
+          } finally {
+            if (showLoader && syncLoader) {
+              syncLoader.classList.add("hidden");
+            }
+          }
+        }
+
+        async function queueAction(action, id) {
+          if (!id) return;
+          const now = Date.now();
+          try {
+            if (syncLoader) {
+              syncLoaderText.textContent = "Синхронізація дії...";
+              syncLoader.classList.remove("hidden");
+            }
+            const url = `${GOOGLE_APP_URL}?type=queue_action&action=${encodeURIComponent(action)}&id=${encodeURIComponent(id)}&_t=${now}`;
+            const res = await fetch(url, { method: "GET", redirect: "follow" });
+            const text = await res.text();
+            let json = {};
+            try {
+              json = text ? JSON.parse(text) : {};
+            } catch (e) {
+              console.error("queue_action invalid JSON", e, text);
+            }
+            const ok = json.status === "success" || json.status === "ok" || res.ok;
+            if (!ok) {
+              showToast(json.msg || json.message || "Помилка виконання дії", "error");
+              playSafe(soundError);
+            } else {
+              switch (action) {
+                case "start": playSafe(soundStarted); break;
+                case "finish": playSafe(soundUsed); break;
+                case "delete": playSafe(soundDeleted); break;
+                case "skip": playSafe(soundSkipped); break;
+                case "pause":
+                case "resume":
+                default: break;
+              }
+              await fetchQueueState(false);
+            }
+          } catch (e) {
+            console.error("queueAction error", e);
+            showToast("Помилка з'єднання з сервером черги", "error");
+            playSafe(soundError);
+          } finally {
+            if (syncLoader) {
+              syncLoader.classList.add("hidden");
+            }
+          }
+        }
+
+        async function joinQueue(requestMinutes, queueId) {
+          const now = Date.now();
+          try {
+            if (syncLoader) {
+              syncLoaderText.textContent = "Додавання в чергу...";
+              syncLoader.classList.remove("hidden");
+            }
+            const viciId = localStorage.getItem("megogo_queue_viciId") || localStorage.getItem("megogo_lunch_email") || "";
+            const url = `${GOOGLE_APP_URL}?type=add_queue_member&viciId=${encodeURIComponent(viciId)}&queueId=${encodeURIComponent(queueId)}&breakTime=${encodeURIComponent(requestMinutes)}&_t=${now}`;
+            const res = await fetch(url, { method: "GET", redirect: "follow" });
+            const text = await res.text();
+            let json = {};
+            try {
+              json = text ? JSON.parse(text) : {};
+            } catch (e) {
+              console.error("add_queue_member invalid JSON", e, text);
+            }
+            const ok = json.status === "success" || json.status === "ok" || res.ok;
+            if (!ok) {
+              showToast(json.msg || json.message || "Не вдалося стати в чергу", "error");
+              playSafe(soundError);
+            } else {
+              playSafe(soundStarted);
+              showToast("Ви додані до черги", "success");
+              await fetchQueueState(false);
+            }
+          } catch (e) {
+            console.error("joinQueue error", e);
+            showToast("Помилка з'єднання з сервером черги", "error");
+            playSafe(soundError);
+          } finally {
+            if (syncLoader) {
+              syncLoader.classList.add("hidden");
+            }
+          }
+        }
+
+        function initQueueUI() {
+          if (queuePollingStarted) return;
+          queuePollingStarted = true;
+
+          // Hide legacy grid controls
+          const viewToggle = document.querySelector(".view-toggle");
+          if (viewToggle) viewToggle.classList.add("hidden");
+          // Initial load
+          fetchQueueState(true);
+
+          // Polling every 10 seconds
+          setInterval(() => {
+            fetchQueueState(false);
+          }, 10000);
+
+          // Local live timers
+          setInterval(updateLiveTimers, 1000);
+
+          // Join queue form
+          if (queueStatusEls.joinForm && queueStatusEls.requestMinutesInput && queueStatusEls.queueTypeSelect) {
+            queueStatusEls.joinForm.addEventListener("submit", (e) => {
+              e.preventDefault();
+              let rawMinutes = Number(queueStatusEls.requestMinutesInput.value || 0);
+              const queueId = Number(queueStatusEls.queueTypeSelect.value || 1);
+              if (!rawMinutes || rawMinutes <= 0) {
+                showToast("Вкажіть тривалість перерви", "error");
+                playSafe(soundError);
+                return;
+              }
+
+              const user = queueState.user;
+              if (true) {
+                const requested = rawMinutes;
+                const allowed = Number(user.allowedMinutes || 0);
+                const used = Number(user.usedMinutes || 0);
+                
+                // NEW: Calculate how many minutes the user already has pending/active in the queue
+                let pendingMinutes = 0;
+                queueState.items.forEach(item => {
+                  // Only count non-WC items that belong to the current user
+                  if (Number(item.queueId) !== 4 && isOwnQueueItem(item)) {
+                    // If it's active, the time is already partially in 'usedMinutes' from the backend, 
+                    // but to be safe and strict with queue slots, we sum the full requested breakTime.
+                    // For a perfect calculation without double-counting active time, we just check waiting + active total limits.
+                    pendingMinutes += Number(item.breakTime || 0);
+                  }
+                });
+
+                // Calculate actual remaining time taking into account the queue
+                const realRemaining = Math.max(0, allowed - used - pendingMinutes);
+
+                if (allowed > 0 && requested > realRemaining + 0.01) {
+                  showToast(`Перевищено ліміт! Доступно для бронювання: ${Math.floor(realRemaining)} хв.`, "error");
+                  playSafe(soundError);
+                  return;
+                }
+              }
+
+              joinQueue(rawMinutes, queueId);
+            });
+          }
+
+          if (queueStatusEls.refreshBtn) {
+            queueStatusEls.refreshBtn.addEventListener("click", () => {
+              fetchQueueState(true);
+            });
+          }
+        }
+
+        // Start queue UI when main app becomes visible (after auth)
+        const appVisibilityTimer = setInterval(() => {
+          if (!appRoot) return;
+          const isVisible = !appRoot.classList.contains("hidden");
+          if (isVisible) {
+            clearInterval(appVisibilityTimer);
+            initQueueUI();
+          }
+        }, 500);
+
+      // Shift duration modal logic
+      const shiftCardEl = document.getElementById("shift-duration-card");
+      const shiftModalOverlay = document.getElementById("shift-modal-overlay");
+      const shiftCancelBtn = document.getElementById("shift-cancel");
+      const shiftSaveBtn = document.getElementById("shift-save");
+      const shiftHoursInput = document.getElementById("shift-custom-hours");
+      const shiftQuickButtons = Array.from(document.querySelectorAll(".shift-quick-btn"));
+
+      function setActiveShiftQuick(hours) {
+        shiftQuickButtons.forEach(btn => {
+          const h = parseFloat(btn.dataset.hours || "0");
+          const isActive = !Number.isNaN(hours) && Math.abs(h - hours) < 0.001;
+          btn.classList.toggle("bg-sky-50", isActive);
+          btn.classList.toggle("border-sky-300", isActive);
+          btn.classList.toggle("dark:bg-sky-900/30", isActive);
+          btn.classList.toggle("dark:border-sky-500", isActive);
+          btn.classList.toggle("text-sky-700", isActive);
+          btn.classList.toggle("dark:text-sky-200", isActive);
+        });
+      }
+
+      function openShiftModal() {
+        if (!shiftModalOverlay) return;
+        // Pre-fill from current queue state if available
+        let hours = 0;
+        if (queueState && queueState.user && queueState.user.shiftMinutes) {
+          hours = queueState.user.shiftMinutes / 60;
+        }
+        if (!hours || hours <= 0) hours = 9;
+        if (shiftHoursInput) shiftHoursInput.value = String(hours);
+        setActiveShiftQuick(hours);
+
+        shiftModalOverlay.classList.remove("pointer-events-none", "opacity-0");
+        shiftModalOverlay.classList.add("opacity-100");
+      }
+
+      function closeShiftModal() {
+        if (!shiftModalOverlay) return;
+        shiftModalOverlay.classList.add("pointer-events-none", "opacity-0");
+        shiftModalOverlay.classList.remove("opacity-100");
+      }
+
+      if (shiftCardEl && shiftModalOverlay) {
+        shiftCardEl.addEventListener("click", openShiftModal);
+        if (shiftCancelBtn) shiftCancelBtn.addEventListener("click", closeShiftModal);
+        shiftModalOverlay.addEventListener("click", (e) => {
+          if (e.target === shiftModalOverlay) closeShiftModal();
+        });
+        shiftQuickButtons.forEach(btn => {
+          btn.addEventListener("click", () => {
+            const h = parseFloat(btn.dataset.hours || "0");
+            if (!Number.isNaN(h) && shiftHoursInput) {
+              shiftHoursInput.value = String(h);
+            }
+            setActiveShiftQuick(h);
+          });
+        });
+        if (shiftSaveBtn && shiftHoursInput) {
+          shiftSaveBtn.addEventListener("click", async () => {
+            let hours = parseFloat(shiftHoursInput.value || "0");
+            if (!hours || hours <= 0 || hours > 24) {
+              showToast("Введіть коректну тривалість (0-24 год)", "error");
+              return;
+            }
+            const viciId = localStorage.getItem("megogo_queue_viciId") || localStorage.getItem("megogo_lunch_email") || "";
+            if (!viciId) {
+              showToast("Не знайдено ідентифікатор оператора", "error");
+              return;
+            }
+            const originalText = shiftSaveBtn.textContent;
+            shiftSaveBtn.textContent = "Збереження...";
+            shiftSaveBtn.disabled = true;
+            try {
+              const url = `${GOOGLE_APP_URL}?type=update_shift_hours&viciId=${encodeURIComponent(viciId)}&hours=${encodeURIComponent(hours)}&_t=${Date.now()}`;
+              const res = await fetch(url, { method: "GET", redirect: "follow" });
+              const text = await res.text();
+              let json = {};
+              try {
+                json = text ? JSON.parse(text) : {};
+              } catch (_) {
+                json = {};
+              }
+              if (json.status === "success" || json.status === "ok" || res.ok) {
+                showToast("Тривалість зміни оновлено", "success");
+                closeShiftModal();
+                await fetchQueueState(true);
+              } else {
+                showToast(json.msg || json.message || "Помилка оновлення зміни", "error");
+              }
+            } catch (e) {
+              console.error("update_shift_hours error", e);
+              showToast("Помилка з'єднання з сервером", "error");
+            } finally {
+              shiftSaveBtn.disabled = false;
+              shiftSaveBtn.textContent = originalText;
+            }
+          });
+        }
+      }
+
+      // Allowed time info modal logic
+      const allowedTimeCard = document.getElementById("allowed-time-card");
+      const allowedTimeModalOverlay = document.getElementById("allowed-time-modal-overlay");
+      const closeAllowedTimeBtn = document.getElementById("close-allowed-time");
+
+      function openAllowedTimeModal() {
+        if (!allowedTimeModalOverlay) return;
+        allowedTimeModalOverlay.classList.remove("pointer-events-none", "opacity-0");
+        allowedTimeModalOverlay.classList.add("opacity-100");
+      }
+
+      function closeAllowedTimeModal() {
+        if (!allowedTimeModalOverlay) return;
+        allowedTimeModalOverlay.classList.add("pointer-events-none", "opacity-0");
+        allowedTimeModalOverlay.classList.remove("opacity-100");
+      }
+
+      if (allowedTimeCard && allowedTimeModalOverlay) {
+        allowedTimeCard.addEventListener("click", openAllowedTimeModal);
+        if (closeAllowedTimeBtn) {
+          closeAllowedTimeBtn.addEventListener("click", closeAllowedTimeModal);
+        }
+        allowedTimeModalOverlay.addEventListener("click", (e) => {
+          if (e.target === allowedTimeModalOverlay) closeAllowedTimeModal();
+        });
+      }
+
+      });
+    </script>
+  </body>
+</html>
