@@ -1978,12 +1978,13 @@
                 // Calculate actual remaining time taking into account the queue
                 const realRemaining = Math.max(0, allowed - used - pendingMinutes);
 
-                if (allowed > 0 && requested > realRemaining + 0.01) {
-                  showToast(`Перевищено ліміт! Доступно для бронювання: ${Math.floor(realRemaining)} хв.`, "error");
-                  playSafe(soundError);
-                  return;
+                const toleranceMinutes = 5; // 5 минут поблажки
+                if (allowed > 0 && requested > realRemaining + toleranceMinutes + 0.01) {
+                showToast(`Перевищено ліміт! Доступно: ${Math.floor(realRemaining)} хв (з урахуванням лояльності).`, "error");
+                playSafe(soundError);
+                return;
                 }
-              }
+                }
 
               joinQueue(rawMinutes, queueId);
             });
