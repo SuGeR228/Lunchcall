@@ -1980,7 +1980,7 @@
 
                 const toleranceMinutes = 5; // 5 минут поблажки
                 if (allowed > 0 && requested > realRemaining + toleranceMinutes + 0.01) {
-                showToast(`Перевищено ліміт! Доступно: ${Math.floor(realRemaining)} хв (з урахуванням лояльності).`, "error");
+                showToast(`Перевищено ліміт! Доступно: ${Math.floor(realRemaining)} хв`, "error");
                 playSafe(soundError);
                 return;
                 }
