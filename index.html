@@ -685,6 +685,7 @@
                     if (json.role) {
                       localStorage.setItem("megogo_lunch_role", json.role);
                       currentUserRole = json.role;
+                      currentUserFullName = json.surname + " " + json.name;
                     }
                     currentUserFullName = (surname + " " + name).trim();
                     completeAuth();
